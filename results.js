@@ -215,28 +215,32 @@
   }
 
   const mealBody = document.querySelector('#meal-plan-table tbody');
-  report.mealPlan.days.forEach((day) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${dayLabel(day.day)}</td>
-      <td>${localizeFoodText(day.breakfast)}</td>
-      <td>${localizeFoodText(day.lunch)}</td>
-      <td>${localizeFoodText(day.dinner)}</td>
-      <td>$${day.estimatedCost}</td>
-    `;
-    mealBody.appendChild(row);
-  });
+  if (mealBody && report?.mealPlan?.days) {
+    report.mealPlan.days.forEach((day) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${dayLabel(day.day)}</td>
+        <td>${localizeFoodText(day.breakfast)}</td>
+        <td>${localizeFoodText(day.lunch)}</td>
+        <td>${localizeFoodText(day.dinner)}</td>
+        <td>$${day.estimatedCost}</td>
+      `;
+      mealBody.appendChild(row);
+    });
+  }
 
   const budgetAlert = document.getElementById('budget-alert');
-  if (report.mealPlan.budgetRisk === 'high') {
-    budgetAlert.className = 'alert alert-danger';
-    budgetAlert.textContent = t('budget_high');
-  } else if (report.mealPlan.budgetRisk === 'moderate') {
-    budgetAlert.className = 'alert alert-warn';
-    budgetAlert.textContent = t('budget_moderate');
-  } else {
-    budgetAlert.className = 'alert alert-success';
-    budgetAlert.textContent = t('budget_low');
+  if (budgetAlert && report?.mealPlan) {
+    if (report.mealPlan.budgetRisk === 'high') {
+      budgetAlert.className = 'alert alert-danger';
+      budgetAlert.textContent = t('budget_high');
+    } else if (report.mealPlan.budgetRisk === 'moderate') {
+      budgetAlert.className = 'alert alert-warn';
+      budgetAlert.textContent = t('budget_moderate');
+    } else {
+      budgetAlert.className = 'alert alert-success';
+      budgetAlert.textContent = t('budget_low');
+    }
   }
 
   const speakButton = document.getElementById('speak-btn');
