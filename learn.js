@@ -56,6 +56,10 @@
 
     buttons.forEach((button) => {
       button.setAttribute('role', 'tab');
+      if (options.openInNewTab && button.tagName === 'A') {
+        button.setAttribute('target', '_blank');
+        button.setAttribute('rel', 'noopener noreferrer');
+      }
     });
 
     function setFocusMode(enabled) {
@@ -122,6 +126,7 @@
     buttons.forEach((button) => {
       button.addEventListener('click', (event) => {
         if (!button.dataset.tab) return;
+        if (options.openInNewTab && button.tagName === 'A') return;
         if (options.queryParam) {
           if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
           event.preventDefault();
@@ -1722,12 +1727,14 @@
     defaultTab: 'risk',
     useHash: true,
     queryParam: 'tool',
+    openInNewTab: true,
     focusHideSelectors: ['#tool-next-steps', '#voice-support'],
   });
   initToolTabs('recipe-tools-shell', {
     defaultTab: 'ingredients',
     useHash: false,
     queryParam: 'recipeTool',
+    openInNewTab: true,
     focusHideSelectors: ['#meal-rescue-builder', '#meal-links'],
   });
 
