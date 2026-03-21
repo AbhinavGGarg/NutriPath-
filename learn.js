@@ -1724,7 +1724,7 @@
     useHash: true,
     queryParam: 'tool',
     allowOverview: false,
-    focusedMode: true,
+    focusedMode: false,
     focusHideSelectors: ['#tool-next-steps', '#voice-support'],
   });
   initToolTabs('recipe-tools-shell', {
@@ -1732,7 +1732,7 @@
     useHash: false,
     queryParam: 'recipeTool',
     allowOverview: false,
-    focusedMode: true,
+    focusedMode: false,
     focusHideSelectors: ['#meal-rescue-builder', '#meal-links'],
   });
 
