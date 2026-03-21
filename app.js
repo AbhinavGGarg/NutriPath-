@@ -7522,52 +7522,11 @@
  nav.appendChild(controls);
  }
 
- function initHomeFunWidget() {
- const triviaBtn = document.getElementById('home-trivia-btn');
- const jokeBtn = document.getElementById('home-joke-btn');
- const resultNode = document.getElementById('home-fun-result');
- if (!triviaBtn || !jokeBtn || !resultNode) return;
- if (triviaBtn.dataset.bound === '1') return;
-
- async function run(path, loadingText) {
- resultNode.classList.add('is-loading');
- resultNode.textContent = loadingText;
- try {
- const response = await fetch('/api/spoonacular', {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- path,
- method: 'GET',
- params: {},
- form: null,
- }),
- });
- const payload = await response.json().catch(() => null);
- if (!response.ok) {
- throw new Error(payload?.error || payload?.message || 'Could not load this right now.');
- }
- resultNode.textContent = String(payload?.text || 'No content returned right now.');
- } catch (error) {
- resultNode.textContent = `Could not load this right now. ${error.message || ''}`.trim();
- } finally {
- resultNode.classList.remove('is-loading');
- }
- }
-
- triviaBtn.dataset.bound = '1';
- jokeBtn.dataset.bound = '1';
-
- triviaBtn.addEventListener('click', () => run('/food/trivia/random', 'Loading trivia...'));
- jokeBtn.addEventListener('click', () => run('/food/jokes/random', 'Loading joke...'));
- }
-
  function applyGlobalUi() {
  decorateNavForTranslation();
  applyTranslations(document);
  createAuthButtons();
  createLanguageWidget();
- initHomeFunWidget();
  initAutoDomObserver();
  scheduleAutoDomTranslation();
  }

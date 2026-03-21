@@ -35,7 +35,6 @@
  </div>
  <div class="hero-title-row">
  <h1>Spot nutrition risk early. Make the next meal better. Find real help fast.</h1>
- <a class="btn btn-secondary btn-small" href="./meal-builder.html?recipeTool=remix#recipe-widget">Fast Food Remix</a>
  </div>
  <p>
  NutriPath helps families and caregivers spot nutrition risk early, build better meals from what they already have, and find nearby support when access is limited.
@@ -66,21 +65,59 @@
  </section>
 
  <section class="section">
- <article class="card" id="home-fun-widget">
- <h3>Food Trivia + Jokes</h3>
- <p class="small-text">Quick break widget while planning meals.</p>
- <div class="cta-row">
- <button id="home-trivia-btn" class="btn btn-secondary btn-small" type="button">Get trivia</button>
- <button id="home-joke-btn" class="btn btn-secondary btn-small" type="button">Get joke</button>
+ <div id="recipe-tools-shell">
+ <article class="card recipe-tool">
+ <h3>Fast Food Remix</h3>
+ <p class="small-text">
+ Build a healthier version of your exact fast-food craving using a guided step flow. No chat required.
+ </p>
+ <div class="form-grid">
+ <div class="field">
+ <label for="recipe-remix-restaurant">1) Which fast food place?</label>
+ <input id="recipe-remix-restaurant" placeholder="e.g., Dave's Hot Chicken, McDonald's, local burger spot" />
  </div>
- <div id="home-fun-result" class="recipe-result" style="margin-top: 0.7rem;"></div>
+ <div class="field">
+ <label for="recipe-remix-item">2) Which exact item are you craving?</label>
+ <input id="recipe-remix-item" placeholder="e.g., spicy slider, cauliflower burger, chicken wrap" />
+ </div>
+ <div class="field">
+ <label for="recipe-remix-diet">3) Any diet preference?</label>
+ <select id="recipe-remix-diet">
+ <option value="none">No preference</option>
+ <option value="vegetarian">Vegetarian</option>
+ <option value="vegan">Vegan</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="recipe-remix-priority">4) What matters most?</label>
+ <select id="recipe-remix-priority">
+ <option value="balanced">Balanced taste + health</option>
+ <option value="taste">Taste first</option>
+ <option value="health">Health first</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="recipe-remix-goals">5) Any goals?</label>
+ <input id="recipe-remix-goals" placeholder="e.g., lower calories, high protein, less oil" />
+ </div>
+ <div class="field" style="align-content: end;">
+ <div class="cta-row">
+ <button id="recipe-remix-generate" class="btn btn-primary btn-small" type="button">Generate Fast Food Remix</button>
+ <button id="recipe-remix-reset" class="btn btn-secondary btn-small" type="button">Reset</button>
+ </div>
+ </div>
+ </div>
+ <div id="recipe-remix-result" class="recipe-result"></div>
  </article>
+ </div>
  </section>
 
  </main>
 
  <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
 
+ <script src="./runtime-config.js"></script>
  <script src="./app.js"></script>
+ <script src="./learn.js"></script>
  </body>
 </html>
