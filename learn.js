@@ -1,9 +1,33 @@
 (function () {
   const t = (key, vars) => (window.NutriApp?.t ? window.NutriApp.t(key, vars) : key);
+  const INTEGRATION_STORAGE_KEYS = {
+    voiceApiKey: 'nutripath_voice_api_key',
+    recipeApiKey: 'nutripath_recipe_api_key',
+  };
+
+  function readStoredKey(name) {
+    try {
+      return localStorage.getItem(INTEGRATION_STORAGE_KEYS[name] || '') || '';
+    } catch {
+      return '';
+    }
+  }
+
+  function persistStoredKey(name, value) {
+    try {
+      const key = INTEGRATION_STORAGE_KEYS[name];
+      if (!key) return;
+      if (value) localStorage.setItem(key, value);
+      else localStorage.removeItem(key);
+    } catch {
+      // Ignore storage write failures in restricted browsers.
+    }
+  }
+
   const runtimeKeys = window.NUTRIPATH_KEYS || {};
   const INTEGRATION_KEYS = {
-    voiceApiKey: runtimeKeys.voiceApiKey || '',
-    recipeApiKey: runtimeKeys.recipeApiKey || '',
+    voiceApiKey: runtimeKeys.voiceApiKey || readStoredKey('voiceApiKey'),
+    recipeApiKey: runtimeKeys.recipeApiKey || readStoredKey('recipeApiKey'),
   };
   const VOICE_API_BASE = 'https://dev.voice.ai/api/v1';
   const SPOONACULAR_API_BASE = 'https://api.spoonacular.com';
@@ -1221,6 +1245,10 @@
     const ingredientsInput = document.getElementById('recipe-ingredients-input');
     if (!ingredientsInput) return;
 
+    const recipeApiKeyInput = document.getElementById('recipe-api-key-input');
+    const recipeApiKeySaveBtn = document.getElementById('recipe-api-key-save');
+    const recipeApiKeyClearBtn = document.getElementById('recipe-api-key-clear');
+    const recipeApiKeyStatus = document.getElementById('recipe-api-key-status');
     const ingredientsBtn = document.getElementById('recipe-ingredients-btn');
     const ingredientsResult = document.getElementById('recipe-ingredients-result');
     const nutritionQuery = document.getElementById('recipe-nutrition-query');
@@ -1251,6 +1279,52 @@
     const chatBtn = document.getElementById('recipe-chat-btn');
     const chatResult = document.getElementById('recipe-chat-result');
 
+    function setRecipeApiStatus(text, type = 'ok') {
+      if (!recipeApiKeyStatus) return;
+      recipeApiKeyStatus.className = `small-text ${type === 'error' ? 'status-err' : 'status-ok'}`;
+      recipeApiKeyStatus.textContent = text;
+    }
+
+    function applyRecipeApiKey(value, persist = true) {
+      const next = String(value || '').trim();
+      INTEGRATION_KEYS.recipeApiKey = next;
+      if (persist) persistStoredKey('recipeApiKey', next);
+      if (recipeApiKeyInput) recipeApiKeyInput.value = next;
+      if (next) {
+        setRecipeApiStatus('Recipe API key saved. Nutrition search is ready.');
+      } else {
+        setRecipeApiStatus('Recipe API key cleared. Add a key to use recipe tools.', 'error');
+      }
+    }
+
+    const bootParams = new URLSearchParams(window.location.search);
+    const apiKeyFromQuery = String(bootParams.get('recipeApiKey') || '').trim();
+    if (apiKeyFromQuery) {
+      applyRecipeApiKey(apiKeyFromQuery, true);
+      bootParams.delete('recipeApiKey');
+      const cleanedQuery = bootParams.toString();
+      const cleanedUrl = `${window.location.pathname}${cleanedQuery ? `?${cleanedQuery}` : ''}${window.location.hash}`;
+      history.replaceState(null, '', cleanedUrl);
+    } else if (INTEGRATION_KEYS.recipeApiKey) {
+      if (recipeApiKeyInput) recipeApiKeyInput.value = INTEGRATION_KEYS.recipeApiKey;
+      setRecipeApiStatus('Recipe API key is loaded.');
+    } else {
+      setRecipeApiStatus('Add your Spoonacular API key to enable nutrition search.', 'error');
+    }
+
+    recipeApiKeySaveBtn?.addEventListener('click', () => {
+      const key = String(recipeApiKeyInput?.value || '').trim();
+      if (!key) {
+        setRecipeApiStatus('Enter a Spoonacular API key first.', 'error');
+        return;
+      }
+      applyRecipeApiKey(key, true);
+    });
+
+    recipeApiKeyClearBtn?.addEventListener('click', () => {
+      applyRecipeApiKey('', true);
+    });
+
     function setLoading(node, isLoading, text = 'Loading...') {
       if (!node) return;
       node.classList.toggle('is-loading', isLoading);
@@ -1275,7 +1349,7 @@
 
     async function spoonFetch(path, { method = 'GET', params = {}, form = null } = {}) {
       if (!INTEGRATION_KEYS.recipeApiKey) {
-        throw new Error('Recipe API key is missing.');
+        throw new Error('Recipe API key is missing. Add it in the Recipe API setup panel.');
       }
       const url = new URL(`${SPOONACULAR_API_BASE}${path}`);
       Object.entries(params).forEach(([key, value]) => {
