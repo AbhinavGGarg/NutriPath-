@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+ <head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="theme-color" content="#0b3c5d" />
+ <title>NutriPath | Results</title>
+ <link rel="stylesheet" href="./styles.css" />
+ </head>
+ <body data-page="results" data-title-key="title_results">
+ <header class="topbar">
+ <div class="container nav">
+ <a class="brand" href="./index.html"><span class="brand-mark">N</span><span>NutriPath</span></a>
+ <nav class="nav-links" aria-label="Primary navigation">
+ <a class="nav-link" data-nav="home" href="./index.html">Home</a>
+ <a class="nav-link" data-nav="assessment" href="./assessment.html">Assessment</a>
+ <a class="nav-link" data-nav="map" href="./map.html">Resource Map</a>
+ <a class="nav-link" data-nav="meal" href="./meal-builder.html">Meal Builder</a>
+ <a class="nav-link" data-nav="learn" href="./learn.html">Action Hub</a>
+ </nav>
+ </div>
+ </header>
+
+ <main class="container">
+ <section class="page-header">
+ <h1 class="page-title" data-i18n="results_title">Assessment Results</h1>
+ <p class="page-desc" id="result-summary" data-i18n="results_latest">Latest screening output appears below.</p>
+ </section>
+
+ <section id="empty-state" class="card section hide">
+ <h3 data-i18n="results_empty_title">No assessment found</h3>
+ <p class="subtle" data-i18n="results_empty_desc">Run a new assessment to generate results and recommendations.</p>
+ <a class="btn btn-primary" href="./assessment.html" data-i18n="results_empty_cta">Start Assessment</a>
+ </section>
+
+ <section id="results-content" class="section hide">
+ <div class="grid-2">
+ <article class="card">
+ <h3 data-i18n="results_risk_title">Risk Classification</h3>
+ <div class="risk-ring" id="risk-ring"><strong id="risk-score">0</strong></div>
+ <p><strong id="risk-category"></strong></p>
+ <div id="risk-alert" class="alert" role="status"></div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <button class="btn btn-secondary" id="speak-btn" type="button" data-i18n="results_btn_read">Read aloud</button>
+ <button class="btn btn-secondary" id="print-btn" type="button" data-i18n="results_btn_print">Print summary</button>
+ </div>
+ </article>
+
+ <article class="card">
+ <h3 data-i18n="results_actions_title">Priority Actions</h3>
+ <ol id="actions-list"></ol>
+ <div class="alert alert-warn" id="follow-up-text"></div>
+ </article>
+ </div>
+
+ <div class="grid-2 section">
+ <article class="card">
+ <h3 data-i18n="results_def_title">Likely Deficiencies</h3>
+ <table class="table" id="deficiency-table">
+ <thead>
+ <tr>
+ <th data-i18n="results_def_head_nutrient">Nutrient concern</th>
+ <th data-i18n="results_def_head_signal">Signal score</th>
+ <th data-i18n="results_def_head_conf">Confidence</th>
+ </tr>
+ </thead>
+ <tbody></tbody>
+ </table>
+ </article>
+
+ <article class="card">
+ <h3 data-i18n="results_nearest_title">Nearest Services</h3>
+ <div id="resource-cards"></div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <a class="btn btn-primary" href="./map.html" data-i18n="results_open_map">Open Resource Map</a>
+ </div>
+ </article>
+ </div>
+
+ <div class="grid-2 section">
+ <article class="card">
+ <h3>Why this risk was assigned</h3>
+ <ul id="risk-reasons-list"></ul>
+ </article>
+ <article class="card">
+ <h3>What to do right now</h3>
+ <p id="referral-guidance" class="small-text"></p>
+ <p id="meal-focus-guidance" class="small-text"></p>
+ </article>
+ </div>
+
+ <article class="card section">
+ <h3>Recommended Next Steps</h3>
+ <p class="small-text">Based on this screening, use the highest-impact action first.</p>
+ <div id="next-steps-grid" class="next-step-grid"></div>
+ </article>
+
+ <article class="card section">
+ <h3 data-i18n="results_meal_title">7-Day Local Meal Plan</h3>
+ <p class="subtle" data-i18n="results_meal_desc">Budget-aware recommendations optimized for nutrients and locally available foods.</p>
+ <table class="table" id="meal-plan-table">
+ <thead>
+ <tr>
+ <th data-i18n="results_meal_head_day">Day</th>
+ <th data-i18n="results_meal_head_breakfast">Breakfast</th>
+ <th data-i18n="results_meal_head_lunch">Lunch</th>
+ <th data-i18n="results_meal_head_dinner">Dinner</th>
+ <th data-i18n="results_meal_head_cost">Est. cost</th>
+ </tr>
+ </thead>
+ <tbody></tbody>
+ </table>
+ <div id="budget-alert" class="alert" style="margin-top: 0.7rem;"></div>
+ </article>
+
+ <div class="cta-row section">
+ <a class="btn btn-primary" href="./assessment.html" data-i18n="results_run_again">Run Another Assessment</a>
+ <a class="btn btn-secondary" href="./meal-builder.html">Open Meal Builder</a>
+ <a class="btn btn-secondary" href="./learn.html">Open Action Hub</a>
+ </div>
+ </section>
+ </main>
+
+ <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
+
+ <script src="./data.js"></script>
+ <script src="./app.js"></script>
+ <script src="./results.js"></script>
+ </body>
+</html>

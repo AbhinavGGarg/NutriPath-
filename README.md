@@ -1,34 +1,50 @@
-# NutriPath MVP
+# NutriPath (Static Multipage MVP)
 
-NutriPath is an action-first decision-support web app that helps families:
-- detect nutrition risk quickly
-- decide what to do today
-- build practical meals from available food
-- find nearby support options
+NutriPath is an action-first nutrition decision-support platform for U.S. households.
+
+Core positioning:
+
+> NutriPath helps families and caregivers spot nutrition risk early, build better meals from what they already have, and find nearby support when access is limited.
+
+## Pages
+
+- `index.html` - Home
+- `assessment.html` - Assessment + inline results
+- `map.html` - Resource Map
+- `meal-builder.html` - Smart Meal Builder + Recipe tools
+- `learn.html` - Nutrition Action Hub
+- `auth.html` - Log in / Sign up + saved history view
+- `results.html` - Optional standalone results view
 
 ## Run locally
-
-From this folder:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then open:
+Open `http://localhost:8080`.
 
-`http://localhost:8080`
+## Runtime API config (no hardcoded keys)
 
-## Deploy (Vercel static)
+NutriPath reads keys from `window.NUTRIPATH_KEYS` in `runtime-config.js`.
 
-1. Import this `nutripath` folder as a project in Vercel.
-2. Framework preset: `Other`.
-3. Build command: leave empty.
-4. Output directory: leave empty (root static files).
+1. Copy `runtime-config.example.js` -> `runtime-config.js`.
+2. Add keys locally:
+   - `voiceApiKey` for `https://dev.voice.ai/api/v1`
+   - `recipeApiKey` for `https://api.spoonacular.com`
 
-## Demo flow (2 minutes)
+If keys are missing, the app falls back gracefully:
+- Voice: browser speech synthesis
+- Recipe API: user-facing setup warning
 
-1. Open homepage and click `Start 30-sec assessment`.
-2. Fill 5 answers and click `Check my risk`.
-3. Show the risk badge, watch-list, and `Start with this` actions.
-4. Click `Build meal now`, enter foods, and generate meal plan.
-5. Click `Find nearby support`, enter a city, and show results/fallback.
+## Deploy to Vercel
+
+- Framework preset: `Other`
+- Build command: leave empty
+- Output directory: leave empty (root)
+
+## Service worker
+
+- Versioned cache in `sw.js`
+- Network-first strategy for HTML/CSS/JS to reduce stale deploy issues
+- App shell caching for baseline offline behavior

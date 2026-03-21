@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+ <head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="theme-color" content="#0b3c5d" />
+ <title>NutriPath | Login & Sign Up</title>
+ <link rel="stylesheet" href="./styles.css" />
+ </head>
+ <body data-page="auth" data-title-key="title_auth">
+ <header class="topbar">
+ <div class="container nav">
+ <a class="brand" href="./index.html"><span class="brand-mark">N</span><span>NutriPath</span></a>
+ <nav class="nav-links" aria-label="Primary navigation">
+ <a class="nav-link" data-nav="home" href="./index.html">Home</a>
+ <a class="nav-link" data-nav="assessment" href="./assessment.html">Assessment</a>
+ <a class="nav-link" data-nav="map" href="./map.html">Resource Map</a>
+ <a class="nav-link" data-nav="meal" href="./meal-builder.html">Meal Builder</a>
+ <a class="nav-link" data-nav="learn" href="./learn.html">Action Hub</a>
+ </nav>
+ </div>
+ </header>
+
+ <main class="container">
+ <section class="page-header">
+ <h1 class="page-title" data-i18n="btn_account">Account</h1>
+ <p class="page-desc" data-i18n="guest_mode_banner">Guest mode is temporary. Sign in to save your reports across visits.</p>
+ </section>
+
+ <section class="section auth-shell">
+ <article class="card">
+ <h3 data-i18n="btn_login">Log in</h3>
+ <form id="login-form">
+ <div class="field">
+ <label for="login-email" data-i18n="auth_label_email">Email</label>
+ <input id="login-email" type="email" required />
+ </div>
+ <div class="field">
+ <label for="login-password" data-i18n="auth_label_password">Password</label>
+ <input id="login-password" type="password" required />
+ </div>
+ <div class="cta-row" style="margin-top: 0.9rem;">
+ <button class="btn btn-primary" type="submit" data-i18n="btn_login">Log in</button>
+ </div>
+ <p id="login-status" class="status-msg"></p>
+ </form>
+ </article>
+
+ <article class="card">
+ <h3 data-i18n="btn_signup">Sign up</h3>
+ <form id="signup-form">
+ <div class="field">
+ <label for="signup-name" data-i18n="auth_label_name">Full name</label>
+ <input id="signup-name" required />
+ </div>
+ <div class="field">
+ <label for="signup-email" data-i18n="auth_label_email">Email</label>
+ <input id="signup-email" type="email" required />
+ </div>
+ <div class="field">
+ <label for="signup-password" data-i18n="auth_label_password">Password</label>
+ <input id="signup-password" type="password" minlength="6" required />
+ </div>
+ <div class="field">
+ <label for="signup-confirm" data-i18n="auth_label_confirm">Confirm password</label>
+ <input id="signup-confirm" type="password" minlength="6" required />
+ </div>
+ <div class="cta-row" style="margin-top: 0.9rem;">
+ <button class="btn btn-secondary" type="submit" data-i18n="btn_signup">Sign up</button>
+ </div>
+ <p id="signup-status" class="status-msg"></p>
+ </form>
+ </article>
+ </section>
+
+ <section class="section">
+ <article class="card">
+ <h3>Saved report snapshots</h3>
+ <p class="small-text">When logged in, your assessment history is stored per account with timestamps. Guest sessions are temporary.</p>
+ <div id="account-history" class="history-list"></div>
+ </article>
+ </section>
+ </main>
+
+ <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
+
+ <script src="./app.js"></script>
+ <script src="./auth.js"></script>
+ </body>
+</html>

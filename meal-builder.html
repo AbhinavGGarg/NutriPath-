@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+ <head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="theme-color" content="#0b3c5d" />
+ <title>NutriPath | Smart Meal Builder</title>
+ <link rel="stylesheet" href="./styles.css" />
+ </head>
+ <body data-page="meal" data-title-key="title_meal">
+ <header class="topbar">
+ <div class="container nav">
+ <a class="brand" href="./index.html"><span class="brand-mark">N</span><span>NutriPath</span></a>
+ <nav class="nav-links" aria-label="Primary navigation">
+ <a class="nav-link" data-nav="home" href="./index.html">Home</a>
+ <a class="nav-link" data-nav="assessment" href="./assessment.html">Assessment</a>
+ <a class="nav-link" data-nav="map" href="./map.html">Resource Map</a>
+ <a class="nav-link" data-nav="meal" href="./meal-builder.html">Meal Builder</a>
+ <a class="nav-link" data-nav="learn" href="./learn.html">Action Hub</a>
+ </nav>
+ </div>
+ </header>
+
+ <main class="container">
+ <section class="page-header">
+ <h1 class="page-title">Smart Meal Builder for What You Have</h1>
+ <p class="page-desc">
+ Enter foods your household has right now. NutriPath returns the best meal idea you can make today,
+ likely nutrient gaps, low-cost foods to add next, and realistic pantry-friendly swaps.
+ </p>
+ </section>
+
+ <section class="section" id="meal-rescue-builder">
+ <article class="card">
+ <h3>Build from real constraints</h3>
+ <p class="small-text">
+ This tool is designed for food insecurity realities: low budget, limited transport, corner-store access,
+ and inconsistent fresh produce. Canned and frozen foods are supported.
+ </p>
+
+ <div class="form-grid">
+ <div class="field">
+ <label for="hub-food-input">Add a food you have now</label>
+ <input id="hub-food-input" list="hub-food-options" placeholder="Example: canned tuna, rice, peanut butter" />
+ <datalist id="hub-food-options"></datalist>
+ </div>
+ <div class="field" style="align-content: end;">
+ <div class="cta-row">
+ <button id="hub-add-food" class="btn btn-secondary" type="button">Add Food</button>
+ <button id="hub-clear-foods" class="btn btn-secondary" type="button">Clear</button>
+ <button id="hub-analyze-foods" class="btn btn-primary" type="button">Build Meal Plan</button>
+ </div>
+ </div>
+ </div>
+
+ <div id="hub-selected-foods" class="selected-foods" aria-live="polite"></div>
+ <p id="hub-food-status" class="small-text" style="margin: 0.55rem 0 0;"></p>
+
+ <div id="hub-food-results" class="grid-3 section hide meal-builder-results" style="padding-top: 0.9rem;">
+ <article class="card">
+ <h4>Best meal idea now</h4>
+ <ul id="hub-meal-list"></ul>
+ </article>
+ <article class="card">
+ <h4>Good nutrients you already have</h4>
+ <ul id="hub-nutrient-list"></ul>
+ </article>
+ <article class="card">
+ <h4>Likely nutrient gaps</h4>
+ <ul id="hub-gap-list"></ul>
+ </article>
+ <article class="card">
+ <h4>Cheapest helpful foods to add</h4>
+ <ul id="hub-addon-list"></ul>
+ </article>
+ <article class="card">
+ <h4>Easy swaps if missing ingredients</h4>
+ <ul id="hub-swap-list"></ul>
+ </article>
+ <article class="card">
+ <h4>What to do next</h4>
+ <div id="hub-next-steps" class="small-text"></div>
+ </article>
+ </div>
+ </article>
+ </section>
+
+ <section class="section" id="recipe-widget">
+ <article class="card">
+ <h3>Recipe Intelligence Widget</h3>
+ <p class="small-text">
+ Powered by Spoonacular. Use this to find recipes from current ingredients, search by nutrient needs, extract recipes
+ from links, classify cuisine, generate meal plans, build shopping lists, run UPC lookups, detect foods in text, and use
+ a simple recipe chatbot helper.
+ </p>
+
+ <div class="tool-tabs-shell recipe-tabs-shell" id="recipe-tools-shell">
+ <aside class="tool-tabs-nav recipe-tabs-nav" role="tablist" aria-label="Recipe tools">
+ <a class="tool-tab-btn active" href="./meal-builder.html?recipeTool=ingredients#recipe-widget" data-tab="ingredients">Ingredients Search</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=nutrition#recipe-widget" data-tab="nutrition">Nutrition Search</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=extract#recipe-widget" data-tab="extract">Extract From URL</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=classify#recipe-widget" data-tab="classify">Cuisine Classifier</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=mealplan#recipe-widget" data-tab="mealplan">Meal Plan + Shopping</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=upc#recipe-widget" data-tab="upc">UPC Lookup</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=ner#recipe-widget" data-tab="ner">Food Detect</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=fun#recipe-widget" data-tab="fun">Trivia + Jokes</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=chat#recipe-widget" data-tab="chat">Recipe Helper</a>
+ </aside>
+
+ <div class="tool-tabs-panels">
+ <div class="tool-focus-actions hide" data-focus-actions>
+ <a class="btn btn-secondary btn-small" href="./meal-builder.html#recipe-widget">View all recipe tools</a>
+ </div>
+ <article class="card recipe-tool tool-panel is-active" data-tool-tab="ingredients">
+ <h4>What's In Your Fridge Search</h4>
+ <div class="field">
+ <label for="recipe-ingredients-input">Ingredients</label>
+ <input id="recipe-ingredients-input" placeholder="e.g., rice, beans, eggs, spinach" />
+ </div>
+ <div class="cta-row"><button id="recipe-ingredients-btn" class="btn btn-primary btn-small" type="button">Find recipes</button></div>
+ <div id="recipe-ingredients-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="nutrition">
+ <h4>Nutrition Requirement Search</h4>
+ <div class="form-grid">
+ <div class="field">
+ <label for="recipe-nutrition-query">Query</label>
+ <input id="recipe-nutrition-query" placeholder="e.g., breakfast, soup" />
+ </div>
+ <div class="field">
+ <label for="recipe-min-protein">Min protein (g)</label>
+ <input id="recipe-min-protein" type="number" min="0" placeholder="e.g., 20" />
+ </div>
+ <div class="field">
+ <label for="recipe-max-calories">Max calories</label>
+ <input id="recipe-max-calories" type="number" min="0" placeholder="e.g., 600" />
+ </div>
+ </div>
+ <div class="cta-row"><button id="recipe-nutrition-btn" class="btn btn-primary btn-small" type="button">Search by nutrition</button></div>
+ <div id="recipe-nutrition-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="extract">
+ <h4>Extract Recipe From Website</h4>
+ <div class="field">
+ <label for="recipe-url-input">Recipe URL</label>
+ <input id="recipe-url-input" placeholder="https://example.com/recipe-page" />
+ </div>
+ <div class="cta-row"><button id="recipe-extract-btn" class="btn btn-primary btn-small" type="button">Extract</button></div>
+ <div id="recipe-extract-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="classify">
+ <h4>Classify Recipe Type / Cuisine</h4>
+ <div class="field">
+ <label for="recipe-classify-input">Recipe title or description</label>
+ <input id="recipe-classify-input" placeholder="e.g., Chicken Tikka Masala" />
+ </div>
+ <div class="cta-row"><button id="recipe-classify-btn" class="btn btn-primary btn-small" type="button">Classify</button></div>
+ <div id="recipe-classify-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="mealplan">
+ <h4>Generate Meal Plan + Shopping List</h4>
+ <div class="form-grid">
+ <div class="field">
+ <label for="recipe-meal-timeframe">Timeframe</label>
+ <select id="recipe-meal-timeframe">
+ <option value="day">Day</option>
+ <option value="week">Week</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="recipe-meal-calories">Target calories/day</label>
+ <input id="recipe-meal-calories" type="number" min="800" max="4200" step="50" placeholder="e.g., 1800" />
+ </div>
+ </div>
+ <div class="cta-row"><button id="recipe-meal-btn" class="btn btn-primary btn-small" type="button">Generate</button></div>
+ <div id="recipe-meal-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="upc">
+ <h4>UPC Product Lookup (US)</h4>
+ <div class="field">
+ <label for="recipe-upc-input">UPC code</label>
+ <input id="recipe-upc-input" placeholder="e.g., 041631000564" />
+ </div>
+ <div class="cta-row"><button id="recipe-upc-btn" class="btn btn-primary btn-small" type="button">Lookup</button></div>
+ <div id="recipe-upc-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="ner">
+ <h4>Detect Food In Text (NER)</h4>
+ <div class="field">
+ <label for="recipe-ner-input">Text</label>
+ <textarea id="recipe-ner-input" rows="3" placeholder="I had eggs, toast, and banana for breakfast."></textarea>
+ </div>
+ <div class="cta-row"><button id="recipe-ner-btn" class="btn btn-primary btn-small" type="button">Detect</button></div>
+ <div id="recipe-ner-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="fun">
+ <h4>Food Trivia + Jokes</h4>
+ <p class="small-text">Use this as engagement support while users build meal plans.</p>
+ <div class="cta-row">
+ <button id="recipe-trivia-btn" class="btn btn-secondary btn-small" type="button">Get trivia</button>
+ <button id="recipe-joke-btn" class="btn btn-secondary btn-small" type="button">Get joke</button>
+ </div>
+ <div id="recipe-fun-result" class="recipe-result"></div>
+ </article>
+
+ <article class="card recipe-tool tool-panel" data-tool-tab="chat">
+ <h4>Recipe Chatbot Helper</h4>
+ <div class="field">
+ <label for="recipe-chat-input">Ask a recipe question</label>
+ <input id="recipe-chat-input" placeholder="What can I make with oats and eggs?" />
+ </div>
+ <div class="cta-row"><button id="recipe-chat-btn" class="btn btn-primary btn-small" type="button">Ask helper</button></div>
+ <div id="recipe-chat-result" class="recipe-result"></div>
+ </article>
+ </div>
+ </div>
+ </article>
+ </section>
+
+ <section class="section grid-2" id="meal-links">
+ <article class="card">
+ <h3>Need action tools?</h3>
+ <p class="small-text">Use Action Hub to run risk checks, urgency escalation, claim checks, and budget recovery planning.</p>
+ <div class="cta-row">
+ <a class="btn btn-secondary" href="./learn.html?tool=risk#tool-risk-checker">Open Action Hub</a>
+ <a class="btn btn-secondary" href="./learn.html?tool=claim#tool-claim-checker">Check a nutrition claim</a>
+ </div>
+ </article>
+ <article class="card">
+ <h3>Need nearby support?</h3>
+ <p class="small-text">If you are out of options, use the Resource Map to find verified help nearby or closest verified support.</p>
+ <div class="cta-row">
+ <a class="btn btn-primary" href="./map.html">Find resources</a>
+ </div>
+ </article>
+ </section>
+ </main>
+
+ <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
+
+ <script src="./data.js"></script>
+ <script src="./runtime-config.js"></script>
+ <script src="./app.js"></script>
+ <script src="./learn.js"></script>
+ </body>
+</html>

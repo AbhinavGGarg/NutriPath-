@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+ <head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="theme-color" content="#0b3c5d" />
+ <title>NutriPath | Action Hub</title>
+ <link rel="stylesheet" href="./styles.css" />
+ </head>
+ <body data-page="learn" data-title-key="title_learn">
+ <header class="topbar">
+ <div class="container nav">
+ <a class="brand" href="./index.html"><span class="brand-mark">N</span><span>NutriPath</span></a>
+ <nav class="nav-links" aria-label="Primary navigation">
+ <a class="nav-link" data-nav="home" href="./index.html">Home</a>
+ <a class="nav-link" data-nav="assessment" href="./assessment.html">Assessment</a>
+ <a class="nav-link" data-nav="map" href="./map.html">Resource Map</a>
+ <a class="nav-link" data-nav="meal" href="./meal-builder.html">Meal Builder</a>
+ <a class="nav-link" data-nav="learn" href="./learn.html">Action Hub</a>
+ </nav>
+ </div>
+ </header>
+
+ <main class="container">
+ <section class="page-header action-hero">
+ <div class="badges">
+ <span class="badge">Risk -> Action -> Support</span>
+ <span class="badge">Built for Real Constraints</span>
+ <span class="badge">Fast Household Triage</span>
+ </div>
+ <h1 class="page-title">Nutrition Action Hub</h1>
+ <p class="page-desc">
+ This is NutriPath's intervention layer for real-life U.S. constraints. Use practical tools to check risk,
+ triage warning patterns, recover meal quality on a low budget, and route households to real support.
+ </p>
+ </section>
+
+ <section class="section tool-tabs-shell" id="action-tools-shell">
+ <aside class="tool-tabs-nav" role="tablist" aria-label="Action tools">
+ <a class="tool-tab-btn active" href="./learn.html?tool=risk#tool-risk-checker" data-tab="risk">Risk Checker</a>
+ <a class="tool-tab-btn" href="./learn.html?tool=budget#tool-budget-planner" data-tab="budget">Budget Planner</a>
+ <a class="tool-tab-btn" href="./learn.html?tool=pantry#tool-pantry-rescue" data-tab="pantry">Pantry Rescue</a>
+ <a class="tool-tab-btn" href="./learn.html?tool=escalation#tool-escalation" data-tab="escalation">Urgency Escalation</a>
+ <a class="tool-tab-btn" href="./learn.html?tool=claim#tool-claim-checker" data-tab="claim">Claim Checker</a>
+ </aside>
+
+ <div class="tool-tabs-panels">
+ <div class="tool-focus-actions hide" data-focus-actions>
+ <a class="btn btn-secondary btn-small" href="./learn.html">View all Action Hub tools</a>
+ </div>
+ <article class="card tool-card tool-panel is-active" id="tool-risk-checker" data-tool-tab="risk">
+ <h3>Household Nutrition Risk Checker</h3>
+ <p class="small-text">Quickly estimate whether a household member may be low, moderate, or high nutrition risk.</p>
+ <div class="form-grid">
+ <div class="field">
+ <label for="risk-age-group">Age group</label>
+ <select id="risk-age-group">
+ <option value="child">Child</option>
+ <option value="adult">Adult</option>
+ <option value="older">Older adult</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="risk-food-context">Food context</label>
+ <select id="risk-food-context">
+ <option value="mixed">Mixed foods available</option>
+ <option value="limited">Limited food at home</option>
+ <option value="processed">Mostly processed foods</option>
+ <option value="low_access">Low grocery access / transport barriers</option>
+ </select>
+ </div>
+ </div>
+ <p class="small-text" style="margin: 0.3rem 0 0.5rem;">Select warning signals:</p>
+ <div class="checkbox-grid" id="risk-factor-grid">
+ <label class="checkbox-item"><input type="checkbox" value="low_appetite" /> <span>Low appetite</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="weight_loss" /> <span>Recent weight loss</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="fatigue" /> <span>Fatigue / weakness</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="pale_skin" /> <span>Pale skin</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="swelling" /> <span>Swelling (edema)</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="diarrhea" /> <span>Frequent diarrhea</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="low_activity" /> <span>Low activity</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="dizziness" /> <span>Dizziness</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="confusion" /> <span>Confusion</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="trouble_chewing" /> <span>Trouble chewing</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="missed_meals" /> <span>Missed meals</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="afford_protein" /> <span>Difficulty affording protein foods</span></label>
+ </div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <button id="risk-check-btn" class="btn btn-primary" type="button">Check risk now</button>
+ </div>
+ <div id="risk-check-result" class="tool-result hide"></div>
+ </article>
+
+ <article class="card tool-card tool-panel" id="tool-budget-planner" data-tool-tab="budget">
+ <h3>Food Budget Recovery Planner</h3>
+ <p class="small-text">Create a realistic low-cost nutrition plan when money, storage, and cooking tools are limited.</p>
+ <div class="form-grid">
+ <div class="field">
+ <label for="budget-weekly">Weekly food budget (USD)</label>
+ <input id="budget-weekly" type="number" min="1" step="1" placeholder="e.g., 45" />
+ </div>
+ <div class="field">
+ <label for="budget-household">Household size</label>
+ <input id="budget-household" type="number" min="1" step="1" placeholder="e.g., 4" />
+ </div>
+ <div class="field">
+ <label for="budget-priority">Nutrition priority</label>
+ <select id="budget-priority">
+ <option value="balanced">Balanced support</option>
+ <option value="protein">Protein priority</option>
+ <option value="iron">Iron support priority</option>
+ <option value="kid">Kid-friendly meals</option>
+ <option value="senior">Senior-friendly meals</option>
+ <option value="pantry">Pantry-only resilience</option>
+ </select>
+ </div>
+ </div>
+ <p class="small-text" style="margin: 0.3rem 0 0.5rem;">Cooking/storage access:</p>
+ <div class="checkbox-grid" id="budget-appliances">
+ <label class="checkbox-item"><input type="checkbox" value="fridge" checked /> <span>Fridge</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="freezer" /> <span>Freezer</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="stove" checked /> <span>Stove</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="microwave" /> <span>Microwave</span></label>
+ </div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <button id="budget-plan-btn" class="btn btn-primary" type="button">Build budget plan</button>
+ </div>
+ <div id="budget-plan-result" class="tool-result hide"></div>
+ </article>
+
+ <article class="card tool-card tool-panel" id="tool-pantry-rescue" data-tool-tab="pantry">
+ <h3>Pantry-to-Meal Rescue Tool</h3>
+ <p class="small-text">Input what you have right now and get a practical meal rescue plan with quality feedback.</p>
+ <div class="form-grid">
+ <div class="field">
+ <label for="hub-food-input">Add food you have now</label>
+ <input id="hub-food-input" list="hub-food-options" placeholder="Example: rice, canned tuna, peanut butter" />
+ <datalist id="hub-food-options"></datalist>
+ </div>
+ <div class="field" style="align-content: end;">
+ <div class="cta-row">
+ <button id="hub-add-food" class="btn btn-secondary" type="button">Add food</button>
+ <button id="hub-clear-foods" class="btn btn-secondary" type="button">Clear</button>
+ <button id="hub-analyze-foods" class="btn btn-primary" type="button">Run rescue plan</button>
+ </div>
+ </div>
+ </div>
+ <div id="hub-selected-foods" class="selected-foods" aria-live="polite"></div>
+ <p id="hub-food-status" class="small-text" style="margin: 0.55rem 0 0;"></p>
+
+ <div id="hub-food-results" class="section hide meal-builder-results">
+ <div class="grid-2">
+ <article class="card">
+ <h4>Best meal now</h4>
+ <ul id="hub-meal-list"></ul>
+ </article>
+ <article class="card">
+ <h4>Better version with 1-2 cheap additions</h4>
+ <ul id="hub-better-list"></ul>
+ </article>
+ </div>
+ <div class="grid-2 section" style="padding-top: 0.75rem;">
+ <article class="card">
+ <h4>Likely missing nutrients</h4>
+ <ul id="hub-gap-list"></ul>
+ <p id="hub-easy-fix" class="small-text" style="margin-top: 0.6rem;"></p>
+ </article>
+ <article class="card">
+ <h4>Good enough for now?</h4>
+ <div id="hub-quality-result"></div>
+ <h4 style="margin-top: 0.8rem;">Easy substitutions</h4>
+ <ul id="hub-swap-list"></ul>
+ </article>
+ </div>
+ <article class="card" style="margin-top: 0.75rem;">
+ <h4>What to do next</h4>
+ <div id="hub-next-steps" class="small-text"></div>
+ </article>
+ </div>
+ </article>
+
+ <article class="card tool-card tool-panel" id="tool-escalation" data-tool-tab="escalation">
+ <h3>Urgency / Warning Sign Escalation Tool</h3>
+ <p class="small-text">Check warning combinations and get safety-oriented escalation guidance.</p>
+ <div class="form-grid">
+ <div class="field">
+ <label for="escalation-member">Household member</label>
+ <select id="escalation-member">
+ <option value="child">Child</option>
+ <option value="adult">Adult</option>
+ <option value="older">Older adult</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="escalation-access">Support access level</label>
+ <select id="escalation-access">
+ <option value="normal">Support available</option>
+ <option value="limited">Limited support access</option>
+ <option value="none">No nearby support access</option>
+ </select>
+ </div>
+ </div>
+ <p class="small-text" style="margin: 0.3rem 0 0.5rem;">Select current warning signs:</p>
+ <div class="checkbox-grid" id="escalation-signs">
+ <label class="checkbox-item"><input type="checkbox" value="poor_appetite" /> <span>Poor appetite</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="weight_loss" /> <span>Weight loss</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="fatigue" /> <span>Weakness / fatigue</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="pale_skin" /> <span>Pale skin</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="swelling" /> <span>Swelling</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="confusion" /> <span>Confusion</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="missed_meals" /> <span>Ongoing missed meals</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="low_food_access" /> <span>Low food access</span></label>
+ </div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <button id="escalation-check-btn" class="btn btn-primary" type="button">Check urgency</button>
+ </div>
+ <div id="escalation-result" class="tool-result hide"></div>
+ </article>
+
+ <article class="card tool-card tool-panel" id="tool-claim-checker" data-tool-tab="claim">
+ <h3>Nutrition Claim Checker</h3>
+ <p class="small-text">Check a belief and get a practical correction with an immediate action.</p>
+ <div class="field">
+ <label for="myth-input">Enter nutrition claim</label>
+ <input id="myth-input" placeholder="Example: Healthy food is too expensive" />
+ </div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <button id="myth-check-btn" class="btn btn-primary" type="button">Check claim</button>
+ <button id="myth-clear-btn" class="btn btn-secondary" type="button">Clear</button>
+ </div>
+ <div id="myth-result" class="tool-result hide"></div>
+ </article>
+ </div>
+ </section>
+
+ <section class="section">
+ <article class="card" id="tool-next-steps">
+ <h3>Personalized Next-Step Engine</h3>
+ <p class="small-text">After each tool result, NutriPath recommends the highest-impact next actions.</p>
+ <div id="action-next-steps" class="next-step-grid">
+ <article class="card">
+ <h4>Run a tool to begin</h4>
+ <p class="small-text">Use Risk Checker, Budget Planner, Pantry Rescue, Urgency Tool, or Claim Checker to generate personalized actions.</p>
+ </article>
+ </div>
+ </article>
+ </section>
+
+<section class="section grid-2" id="voice-support">
+<article class="card tool-card">
+<h3>Voice Result Support</h3>
+<p class="small-text">Accessibility mode for low-literacy users. Voice reads short result summaries, not long lesson text.</p>
+ <div class="form-grid">
+ <div class="field">
+ <label for="voice-provider-select">Voice engine</label>
+ <select id="voice-provider-select">
+ <option value="cloud">Voice.ai cloud</option>
+ <option value="browser">Browser fallback</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="voice-id-select">Voice profile</label>
+ <select id="voice-id-select">
+ <option value="">Default built-in voice</option>
+ </select>
+ </div>
+ </div>
+ <div class="cta-row">
+ <button id="voice-refresh-voices" class="btn btn-secondary" type="button">Refresh voices</button>
+ <button id="voice-play-result" class="btn btn-primary" type="button">Play result</button>
+ <button id="voice-replay-result" class="btn btn-secondary" type="button">Replay</button>
+ <button id="voice-stop-result" class="btn btn-secondary" type="button">Stop</button>
+ </div>
+ <label class="checkbox-item" style="margin-top: 0.7rem; max-width: 220px;">
+ <input id="voice-slow-mode" type="checkbox" />
+ <span>Slow mode</span>
+ </label>
+ <p id="voice-status" class="small-text" style="margin-top: 0.5rem;"></p>
+ <div id="voice-last-summary" class="voice-last-summary">No result selected yet.</div>
+ </article>
+
+ <article class="card tool-card">
+ <h3>Continue in Other NutriPath Tools</h3>
+ <p class="small-text">Move quickly from triage to meal action and verified local support.</p>
+ <div class="cta-row">
+ <a class="btn btn-primary" href="./assessment.html">Take Assessment</a>
+ <a class="btn btn-secondary" href="./meal-builder.html">Open Meal Builder</a>
+ <a class="btn btn-secondary" href="./map.html">Open Resource Map</a>
+ </div>
+ </article>
+ </section>
+ </main>
+
+ <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
+
+ <script src="./data.js"></script>
+ <script src="./runtime-config.js"></script>
+ <script src="./app.js"></script>
+ <script src="./learn.js"></script>
+ </body>
+</html>

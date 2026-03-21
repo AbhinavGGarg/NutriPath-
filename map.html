@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+ <head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="theme-color" content="#0b3c5d" />
+ <title>NutriPath | Resource Map</title>
+ <link rel="stylesheet" href="./styles.css" />
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+ <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+ </head>
+ <body data-page="map" data-title-key="title_map">
+ <header class="topbar">
+ <div class="container nav">
+ <a class="brand" href="./index.html"><span class="brand-mark">N</span><span>NutriPath</span></a>
+ <nav class="nav-links" aria-label="Primary navigation">
+ <a class="nav-link" data-nav="home" href="./index.html">Home</a>
+ <a class="nav-link" data-nav="assessment" href="./assessment.html">Assessment</a>
+ <a class="nav-link" data-nav="map" href="./map.html">Resource Map</a>
+ <a class="nav-link" data-nav="meal" href="./meal-builder.html">Meal Builder</a>
+ <a class="nav-link" data-nav="learn" href="./learn.html">Action Hub</a>
+ </nav>
+ </div>
+ </header>
+
+ <main class="container">
+ <section class="page-header">
+ <h1 class="page-title">Find Real Nutrition and Food Support</h1>
+ <p class="page-desc">Check verified clinics, food programs, and community support points. If nothing is nearby, NutriPath shows your closest verified options with clear next actions.</p>
+ </section>
+
+ <section class="section map-shell">
+ <aside class="card">
+ <div class="field">
+ <label for="map-community" data-i18n="map_label_community">Community center</label>
+ <input id="map-community" list="map-community-options" placeholder="Select community" />
+ <datalist id="map-community-options"></datalist>
+ <div id="map-community-suggestions" class="map-suggestions hide" aria-live="polite"></div>
+ <span class="field-hint" data-i18n="map_hint_community">Type manually or choose from suggestions.</span>
+ <p id="map-community-feedback" class="small-text map-feedback hide"></p>
+ </div>
+ <div class="field">
+ <label for="resource-type" data-i18n="map_label_type">Resource type</label>
+ <select id="resource-type">
+ <option value="All" data-i18n="map_option_all">All</option>
+ <option value="Clinic" data-i18n="map_option_clinic">Clinic</option>
+ <option value="Food Support" data-i18n="map_option_food">Food Support</option>
+ <option value="NGO" data-i18n="map_option_ngo">NGO</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="max-distance" data-i18n="map_label_distance">Max distance (km)</label>
+ <input id="max-distance" type="range" min="3" max="500" value="20" />
+ <small id="distance-label" class="small-text">20 km</small>
+ </div>
+ <div class="cta-row" style="margin-top: 0.4rem;">
+ <button id="locate-btn" class="btn btn-secondary" type="button" data-i18n="btn_use_location">Use my location</button>
+ <button id="apply-map-filter" class="btn btn-primary" type="button" data-i18n="btn_apply_filters">Apply filters</button>
+ </div>
+ <p id="location-confirm" class="small-text map-location-confirm hide"></p>
+ <p id="map-status" class="small-text map-status" style="margin: 0.65rem 0 0;"></p>
+ <div id="map-stats" class="map-stats"></div>
+
+ <section id="map-empty-state" class="map-empty-state hide" aria-live="polite">
+ <div class="map-empty-icon" aria-hidden="true">i</div>
+ <h4 id="map-empty-title">No nearby resources found.</h4>
+ <p id="map-empty-copy" class="small-text"></p>
+ <div class="cta-row">
+ <button id="btn-increase-distance" class="btn btn-secondary btn-small" type="button">Increase distance</button>
+ <button id="btn-show-closest" class="btn btn-secondary btn-small" type="button">Show closest verified resources</button>
+ <button id="btn-reset-map" class="btn btn-secondary btn-small" type="button">Reset filters</button>
+ </div>
+ </section>
+
+ <hr style="border: 0; border-top: 1px solid rgba(11, 60, 93, 0.1); margin: 1rem 0;" />
+ <div class="resource-list-heading">
+ <h3 id="resource-list-title" data-i18n="map_nearby_resources">Nearby resources</h3>
+ <p id="resource-list-subtitle" class="small-text"></p>
+ </div>
+ <div id="resource-list" class="resource-list"></div>
+ </aside>
+
+ <section>
+ <div class="map-frame">
+ <div id="resource-map" aria-label="Resource map"></div>
+ <div id="map-loading" class="map-loading hide" aria-live="polite">
+ <div class="map-loading-dot"></div>
+ <span id="map-loading-text">Updating resource results...</span>
+ </div>
+ </div>
+ </section>
+ </section>
+ </main>
+
+ <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
+
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+ <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+ <script src="./data.js"></script>
+ <script src="./app.js"></script>
+ <script src="./map.js"></script>
+ </body>
+</html>

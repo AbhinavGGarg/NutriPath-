@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+ <head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="theme-color" content="#0b3c5d" />
+ <title>NutriPath | Assessment</title>
+ <link rel="stylesheet" href="./styles.css" />
+ </head>
+ <body data-page="assessment" data-title-key="title_assessment">
+ <header class="topbar">
+ <div class="container nav">
+ <a class="brand" href="./index.html"><span class="brand-mark">N</span><span>NutriPath</span></a>
+ <nav class="nav-links" aria-label="Primary navigation">
+ <a class="nav-link" data-nav="home" href="./index.html">Home</a>
+ <a class="nav-link" data-nav="assessment" href="./assessment.html">Assessment</a>
+ <a class="nav-link" data-nav="map" href="./map.html">Resource Map</a>
+ <a class="nav-link" data-nav="meal" href="./meal-builder.html">Meal Builder</a>
+ <a class="nav-link" data-nav="learn" href="./learn.html">Action Hub</a>
+ </nav>
+ </div>
+ </header>
+
+ <main class="container">
+ <section class="page-header">
+ <h1 class="page-title" data-i18n="assessment_title">Malnutrition Risk Assessment</h1>
+ <p class="page-desc" data-i18n="assessment_desc">
+ Complete this form during a household visit or self-check. The system produces a risk class, urgency actions,
+ probable deficiencies, and a local affordable meal plan.
+ </p>
+ <div class="alert alert-warn" style="margin-top: 0.7rem;" data-i18n="guest_mode_banner">
+ Guest mode is temporary. Sign in to save your reports across visits.
+ </div>
+ </section>
+
+ <section class="card section">
+ <div class="field" style="margin-bottom: 0.8rem;">
+ <label for="progress" data-i18n="assessment_progress">Assessment progress</label>
+ <div class="progress" id="progress" aria-label="Form completion progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+ <span></span>
+ </div>
+ </div>
+
+ <form id="assessment-form" novalidate>
+ <h3 data-i18n="assessment_section_profile">1) Profile</h3>
+ <div class="form-grid">
+ <div class="field">
+ <label for="role" class="required-field-label" data-i18n="assessment_label_role">Role</label>
+ <select id="role" name="role" required>
+ <option value="" data-i18n="assessment_option_select_role">Select role</option>
+ <option data-i18n="assessment_role_individual">Individual / Family Member</option>
+ <option data-i18n="assessment_role_caregiver">Caregiver / Parent</option>
+ <option data-i18n="assessment_role_chw">Community Health Worker</option>
+ <option data-i18n="assessment_role_ngo">NGO / Clinic Staff</option>
+ </select>
+ <span class="field-hint" data-i18n="assessment_role_hint">Everyone can use this tool. Choose the role closest to you.</span>
+ </div>
+ <div class="field">
+ <label for="language" class="required-field-label" data-i18n="assessment_label_language">Preferred language</label>
+ <input id="language" name="language" list="language-options" placeholder="Search or type language" data-i18n-placeholder="assessment_placeholder_language" required />
+ <datalist id="language-options"></datalist>
+ <span class="field-hint" data-i18n="assessment_language_hint">Search by language name or type manually.</span>
+ </div>
+ <div class="field">
+ <label for="householdName" class="required-field-label" data-i18n="assessment_label_household">Family name or reference</label>
+ <input id="householdName" name="householdName" placeholder="e.g., Family Patel or Home 102" data-i18n-placeholder="assessment_placeholder_household" required />
+ </div>
+ <div class="field">
+ <label for="community" class="required-field-label" data-i18n="assessment_label_community">Community</label>
+ <input id="community" name="community" list="community-options" placeholder="Select community" required />
+ <datalist id="community-options"></datalist>
+ <span class="field-hint" data-i18n="assessment_community_hint">Works with search and manual entry.</span>
+ </div>
+ <div class="field">
+ <label for="ageYears" class="required-field-label" data-i18n="assessment_label_age">Age (years)</label>
+ <input id="ageYears" name="ageYears" type="number" min="0" max="120" step="1" placeholder="e.g., 18" data-i18n-placeholder="assessment_placeholder_age" required />
+ </div>
+ <div class="field">
+ <label for="sex" class="required-field-label" data-i18n="assessment_label_sex">Sex</label>
+ <select id="sex" name="sex" required>
+ <option value="" data-i18n="assessment_option_select_sex">Select sex</option>
+ <option data-i18n="assessment_option_female">Female</option>
+ <option data-i18n="assessment_option_male">Male</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="householdSize" class="required-field-label" data-i18n="assessment_label_household_size">Number of people in home</label>
+ <input id="householdSize" name="householdSize" type="number" min="1" max="20" required />
+ </div>
+ <div class="field">
+ <label for="weeklyBudget" class="required-field-label" data-i18n="assessment_label_budget">Food budget (USD/week)</label>
+ <input id="weeklyBudget" name="weeklyBudget" type="number" min="1" max="500" required />
+ </div>
+ </div>
+
+ <h3 data-i18n="assessment_section_health">2) Health and Growth</h3>
+ <div class="form-grid">
+ <div class="field">
+ <label for="weight" class="required-field-label" data-i18n="assessment_label_weight">Weight (kg)</label>
+ <input id="weight" name="weight" type="number" step="0.1" min="1" max="150" required />
+ </div>
+ <div class="field">
+ <label for="height" class="required-field-label" data-i18n="assessment_label_height">Height (cm)</label>
+ <input id="height" name="height" type="number" step="0.1" min="30" max="220" required />
+ </div>
+ <div class="field">
+ <label for="muac" data-i18n="assessment_label_muac">MUAC (Mid-Upper Arm Circumference, cm)</label>
+ <input id="muac" name="muac" type="number" step="0.1" min="8" max="35" />
+ </div>
+ <div class="field">
+ <label for="mealsPerDay" class="required-field-label" data-i18n="assessment_label_meals">Meals per day</label>
+ <input id="mealsPerDay" name="mealsPerDay" type="number" min="1" max="8" required />
+ </div>
+ <div class="field">
+ <label for="dietDiversity" class="required-field-label" data-i18n="assessment_label_diversity">Diet diversity score (0-10)</label>
+ <input id="dietDiversity" name="dietDiversity" type="number" min="0" max="10" required />
+ </div>
+ <div class="field">
+ <label for="waterSource" class="required-field-label" data-i18n="assessment_label_water">Water source</label>
+ <select id="waterSource" name="waterSource" required>
+ <option value="" data-i18n="assessment_option_select_source">Select source</option>
+ <option value="safe" data-i18n="assessment_option_safe_water">Safe (treated/piped)</option>
+ <option value="unsafe" data-i18n="assessment_option_unsafe_water">Unsafe (untreated/open)</option>
+ </select>
+ </div>
+ </div>
+
+ <h3 class="required-field-label" data-i18n="assessment_section_symptoms">3) Symptoms (select all that apply)</h3>
+ <div class="checkbox-grid" id="symptom-list"></div>
+
+ <h3>4) Foods currently available (optional, but recommended)</h3>
+ <div class="form-grid">
+ <div class="field">
+ <label for="assessment-food-input">Food search</label>
+ <input id="assessment-food-input" list="assessment-food-options" placeholder="Search or type food (custom foods allowed)" />
+ <datalist id="assessment-food-options"></datalist>
+ <span class="field-hint">Type and press Enter or click Add. Unknown foods are accepted.</span>
+ </div>
+ <div class="field" style="align-content: end;">
+ <div class="cta-row">
+ <button id="assessment-food-add" class="btn btn-secondary" type="button">Add food</button>
+ <button id="assessment-food-clear" class="btn btn-secondary" type="button">Clear foods</button>
+ </div>
+ </div>
+ </div>
+ <div id="assessment-food-selected" class="selected-foods" aria-live="polite"></div>
+ <p id="assessment-food-status" class="small-text"></p>
+
+ <h3 data-i18n="assessment_section_photo">5) Optional photo input</h3>
+ <div class="form-grid">
+ <div class="field">
+ <label for="foodPhoto" data-i18n="assessment_label_photo">Meal/Pantry photo (optional)</label>
+ <input id="foodPhoto" name="foodPhoto" type="file" accept="image/*" />
+ </div>
+ <div class="field">
+ <label for="notes" data-i18n="assessment_label_notes">Field notes</label>
+ <textarea id="notes" name="notes" rows="3" placeholder="Any contextual notes from visit" data-i18n-placeholder="assessment_placeholder_notes"></textarea>
+ </div>
+ </div>
+
+ <div id="validation-message" class="alert alert-danger hide" role="alert"></div>
+ <div class="cta-row" style="margin-top: 1rem;">
+ <button class="btn btn-primary" type="submit" data-i18n="assessment_btn_run">Run Assessment</button>
+ <a class="btn btn-secondary" href="./index.html" data-i18n="common_cancel">Cancel</a>
+ </div>
+ </form>
+ </section>
+
+ <section id="assessment-results-panel" class="section hide">
+ <section class="page-header">
+ <h2 class="page-title" data-i18n="results_title">Assessment Results</h2>
+ <p class="page-desc" id="result-summary" data-i18n="results_latest">Latest screening output appears below.</p>
+ </section>
+
+ <section id="empty-state" class="card section hide">
+ <h3 data-i18n="results_empty_title">No assessment found</h3>
+ <p class="subtle" data-i18n="results_empty_desc">Run a new assessment to generate results and recommendations.</p>
+ </section>
+
+ <section id="results-content" class="section hide">
+ <div class="grid-2">
+ <article class="card">
+ <h3 data-i18n="results_risk_title">Risk Classification</h3>
+ <div class="risk-ring" id="risk-ring"><strong id="risk-score">0</strong></div>
+ <p><strong id="risk-category"></strong></p>
+ <div id="risk-alert" class="alert" role="status"></div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <button class="btn btn-secondary" id="speak-btn" type="button" data-i18n="results_btn_read">Read aloud</button>
+ <button class="btn btn-secondary" id="print-btn" type="button" data-i18n="results_btn_print">Print summary</button>
+ </div>
+ </article>
+
+ <article class="card">
+ <h3 data-i18n="results_actions_title">Priority Actions</h3>
+ <ol id="actions-list"></ol>
+ <div class="alert alert-warn" id="follow-up-text"></div>
+ </article>
+ </div>
+
+ <div class="grid-2 section">
+ <article class="card">
+<h3 data-i18n="results_def_title">Likely Deficiencies</h3>
+ <table class="table" id="deficiency-table">
+ <thead>
+ <tr>
+ <th data-i18n="results_def_head_nutrient">Nutrient concern</th>
+ <th data-i18n="results_def_head_signal">Signal score</th>
+ <th data-i18n="results_def_head_conf">Confidence</th>
+ </tr>
+ </thead>
+ <tbody></tbody>
+ </table>
+ </article>
+
+ <article class="card">
+ <h3 data-i18n="results_nearest_title">Nearest Services</h3>
+ <div id="resource-cards"></div>
+ <div class="cta-row" style="margin-top: 0.75rem;">
+ <a class="btn btn-primary" href="./map.html" data-i18n="results_open_map">Open Resource Map</a>
+ </div>
+ </article>
+ </div>
+
+ <div class="grid-2 section">
+ <article class="card">
+ <h3>Why this risk was assigned</h3>
+ <ul id="risk-reasons-list"></ul>
+ </article>
+ <article class="card">
+ <h3>What to do right now</h3>
+ <p id="referral-guidance" class="small-text"></p>
+ <p id="meal-focus-guidance" class="small-text"></p>
+ </article>
+ </div>
+
+ <article class="card section">
+ <h3>Recommended Next Steps</h3>
+ <p class="small-text">Use this pathway to move from screening to action in minutes.</p>
+ <div id="next-steps-grid" class="next-step-grid"></div>
+ </article>
+
+ <article class="card section">
+ <h3 data-i18n="results_meal_title">7-Day Local Meal Plan</h3>
+ <p class="subtle" data-i18n="results_meal_desc">Budget-aware recommendations optimized for nutrients and locally available foods.</p>
+ <table class="table" id="meal-plan-table">
+ <thead>
+ <tr>
+ <th data-i18n="results_meal_head_day">Day</th>
+ <th data-i18n="results_meal_head_breakfast">Breakfast</th>
+ <th data-i18n="results_meal_head_lunch">Lunch</th>
+ <th data-i18n="results_meal_head_dinner">Dinner</th>
+ <th data-i18n="results_meal_head_cost">Est. cost</th>
+ </tr>
+ </thead>
+ <tbody></tbody>
+ </table>
+ <div id="budget-alert" class="alert" style="margin-top: 0.7rem;"></div>
+ </article>
+
+ <div class="cta-row section">
+ <a class="btn btn-primary" href="./assessment.html" data-i18n="results_run_again">Run Another Assessment</a>
+ <a class="btn btn-secondary" href="./meal-builder.html">Open Meal Builder</a>
+ <a class="btn btn-secondary" href="./learn.html">Open Action Hub</a>
+ </div>
+ </section>
+ </section>
+ </main>
+
+ <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
+
+ <script src="./data.js"></script>
+ <script src="./app.js"></script>
+ <script src="./assessment.js"></script>
+ <script src="./results.js"></script>
+ </body>
+</html>

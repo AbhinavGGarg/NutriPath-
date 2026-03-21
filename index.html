@@ -1,221 +1,134 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NutriPath | What To Do Right Now</title>
-    <meta
-      name="description"
-      content="NutriPath helps families detect nutrition risk, act now, build meals from available food, and find nearby support."
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./styles.css" />
-    <script defer src="./app.js"></script>
-  </head>
-  <body>
-    <div class="bg-orb orb-a"></div>
-    <div class="bg-orb orb-b"></div>
+ <head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <meta name="theme-color" content="#0b3c5d" />
+ <title>NutriPath | Nutrition Decision Support</title>
+ <link rel="manifest" href="./manifest.webmanifest" />
+ <link rel="stylesheet" href="./styles.css" />
+ </head>
+ <body data-page="home" data-title-key="title_home">
+ <header class="topbar">
+ <div class="container nav">
+ <a class="brand" href="./index.html">
+ <span class="brand-mark">N</span>
+ <span>NutriPath</span>
+ </a>
+ <nav class="nav-links" aria-label="Primary navigation">
+ <a class="nav-link" data-nav="home" href="./index.html">Home</a>
+ <a class="nav-link" data-nav="assessment" href="./assessment.html">Assessment</a>
+ <a class="nav-link" data-nav="map" href="./map.html">Resource Map</a>
+ <a class="nav-link" data-nav="meal" href="./meal-builder.html">Meal Builder</a>
+ <a class="nav-link" data-nav="learn" href="./learn.html">Action Hub</a>
+ </nav>
+ </div>
+ </header>
 
-    <header class="site-header">
-      <div class="container nav-shell">
-        <a href="#top" class="brand" aria-label="NutriPath home">
-          <span class="brand-mark">N</span>
-          <span>NutriPath</span>
-        </a>
-        <nav class="top-nav" aria-label="Primary">
-          <a href="#assessment">Assessment</a>
-          <a href="#meal-builder">Meal Builder</a>
-          <a href="#resources">Support</a>
-        </nav>
-      </div>
-    </header>
+ <main class="container">
+ <section class="hero">
+ <div class="badges">
+ <span class="badge">Early Risk Detection</span>
+ <span class="badge">Meal Builder for What You Have</span>
+ <span class="badge">Real Support Routing</span>
+ </div>
+ <h1>Spot nutrition risk early, act with what you already have, and find real help near you.</h1>
+ <p>
+ NutriPath helps families and caregivers spot nutrition risk early, build better meals from what they already have, and find nearby support when access is limited.
+ This is an action-first decision-support platform for U.S. households, not a passive information site.
+ </p>
+ <div class="cta-row">
+ <a class="btn btn-primary" href="./assessment.html">Start Assessment</a>
+ <a class="btn btn-secondary" href="./meal-builder.html">Open Smart Meal Builder</a>
+ </div>
+ </section>
 
-    <main id="top" class="container main-wrap">
-      <section class="hero panel reveal">
-        <p class="kicker">Action-First Nutrition Support</p>
-        <h1>Know your risk. Act today. Use the food you already have.</h1>
-        <p class="hero-copy">
-          NutriPath gives families a clear next step in under 2 minutes: quick risk check,
-          practical meal decision, and nearby help if needed.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#assessment">Start 30-sec assessment</a>
-          <a class="btn btn-secondary" href="#meal-builder">Skip to meal builder</a>
-        </div>
-        <div class="flow-pills" aria-label="MVP flow">
-          <span class="pill" id="flow-assess">1. Assess</span>
-          <span class="pill" id="flow-results">2. Get actions</span>
-          <span class="pill" id="flow-meal">3. Build meal</span>
-          <span class="pill" id="flow-support">4. Find support</span>
-        </div>
-      </section>
+ <section class="section grid-3">
+ <article class="card feature-card">
+ <h3>1. Act Early on Nutrition Risk</h3>
+ <p>
+ Check warning signs before they get worse, including low appetite, weight loss, low activity, and growth concerns in children.
+ </p>
+ </article>
+ <article class="card feature-card">
+ <h3>2. Build Better Meals From What You Already Have</h3>
+ <p>
+ Turn pantry and low-cost foods into practical meal options, see nutrient gaps, and get affordable foods to add next.
+ </p>
+ </article>
+ <article class="card feature-card">
+ <h3>3. Find Real Support When Access Is Limited</h3>
+ <p>
+ Locate verified food and health resources, handle food desert constraints, and get clearer fallback options when nearby help is limited.
+ </p>
+ </article>
+ </section>
 
-      <section id="assessment" class="panel reveal">
-        <div class="panel-head">
-          <h2>Start with this</h2>
-          <p>Answer 5 quick questions so we can recommend what to do right now.</p>
-        </div>
+ <section class="section grid-2">
+ <article class="card">
+ <h2>Built for real U.S. nutrition challenges</h2>
+ <p class="subtle">
+ Families can face both hunger and poor diet quality at the same time. A full stomach is not always a nourished body.
+ NutriPath supports children, older adults, and mixed households where obesity and nutrient deficiency can coexist.
+ </p>
+ <div class="kpi">
+ <span>What users ask first</span>
+ <strong>"What can I do today?"</strong>
+ </div>
+ <div class="kpi">
+ <span>Focus population</span>
+ <strong>Families, caregivers, teens, seniors</strong>
+ </div>
+ <div class="kpi">
+ <span>Practical lens</span>
+ <strong>Budget + time + access + transport</strong>
+ </div>
+ </article>
 
-        <form id="assessment-form" class="grid-form" novalidate>
-          <label class="field">
-            <span>Age (years)</span>
-            <input id="age" name="age" type="number" min="0" max="120" placeholder="Example: 34" required />
-          </label>
+ <article class="card">
+ <h2>How NutriPath works</h2>
+ <table class="table" aria-label="Core app flow">
+ <thead>
+ <tr>
+ <th>Step</th>
+ <th>What user does</th>
+ <th>What app returns</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>1</td>
+ <td>Complete assessment</td>
+ <td>Risk class + urgent warning flags</td>
+ </tr>
+ <tr>
+ <td>2</td>
+ <td>Open Smart Meal Builder</td>
+ <td>Best meal now + nutrient gaps + cheap add-ons</td>
+ </tr>
+ <tr>
+ <td>3</td>
+ <td>Check a nutrition claim</td>
+ <td>Myth / depends / fact + safer guidance</td>
+ </tr>
+ <tr>
+ <td>4</td>
+ <td>Use Resource Map</td>
+ <td>Nearby support or closest verified fallback</td>
+ </tr>
+ <tr>
+ <td>5</td>
+ <td>Follow targeted next steps</td>
+ <td>Linked lesson + meal + map actions</td>
+ </tr>
+ </tbody>
+ </table>
+ </article>
+ </section>
+ </main>
 
-          <label class="field">
-            <span>Appetite this week</span>
-            <select id="appetite" name="appetite" required>
-              <option value="" selected disabled>Select one</option>
-              <option value="normal">About normal</option>
-              <option value="lower">Lower than usual</option>
-              <option value="very-low">Very low</option>
-            </select>
-          </label>
+ <footer class="container footer"><span>NutriPath intervention platform</span> · <span id="year"></span></footer>
 
-          <label class="field">
-            <span>Meals skipped in a usual day</span>
-            <select id="mealsSkipped" name="mealsSkipped" required>
-              <option value="" selected disabled>Select one</option>
-              <option value="0">None</option>
-              <option value="1">1 meal</option>
-              <option value="2">2 meals</option>
-              <option value="3">3 or more</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Energy level</span>
-            <select id="energy" name="energy" required>
-              <option value="" selected disabled>Select one</option>
-              <option value="normal">About normal</option>
-              <option value="low">Lower than usual</option>
-              <option value="very-low">Very low</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Can your budget cover enough food this week?</span>
-            <select id="affordability" name="affordability" required>
-              <option value="" selected disabled>Select one</option>
-              <option value="stable">Mostly yes</option>
-              <option value="tight">Tight, but managing</option>
-              <option value="strained">No, not enough food</option>
-            </select>
-          </label>
-
-          <button class="btn btn-primary btn-full" type="submit">Check my risk</button>
-          <p id="assessment-error" class="form-error" role="alert" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <section id="results" class="panel reveal hidden" aria-live="polite">
-        <div class="panel-head">
-          <h2>Here's what to do today</h2>
-          <p>Clear actions based on your quick check.</p>
-        </div>
-
-        <div class="results-grid">
-          <article class="result-core card">
-            <p class="label">Current risk</p>
-            <div id="risk-badge" class="risk-badge">Low</div>
-            <p id="risk-explainer" class="result-copy"></p>
-            <p id="risk-score" class="meta"></p>
-          </article>
-
-          <article class="card">
-            <h3>Here's what to watch for</h3>
-            <ul id="watch-list" class="action-list"></ul>
-          </article>
-
-          <article class="card">
-            <h3>Start with this</h3>
-            <ul id="today-actions" class="action-list"></ul>
-          </article>
-        </div>
-
-        <div class="cta-row">
-          <button id="cta-meal" class="btn btn-primary" type="button">Build meal now</button>
-          <button id="cta-support" class="btn btn-secondary" type="button">Find nearby support</button>
-          <button id="speak-summary" class="btn btn-ghost" type="button">Play voice summary</button>
-          <button id="save-summary" class="btn btn-ghost" type="button">Save this result</button>
-        </div>
-      </section>
-
-      <section id="meal-builder" class="panel reveal">
-        <div class="panel-head">
-          <h2>Meal decision in 30 seconds</h2>
-          <p>List what you already have. We'll suggest the best meal now.</p>
-        </div>
-
-        <form id="meal-form" class="meal-form" novalidate>
-          <label class="field">
-            <span>Foods on hand</span>
-            <textarea
-              id="foods"
-              name="foods"
-              rows="4"
-              placeholder="Example: rice, beans, eggs, spinach, banana"
-              required
-            ></textarea>
-          </label>
-          <button type="submit" class="btn btn-primary btn-full">Build my meal now</button>
-          <p id="meal-error" class="form-error" role="alert" aria-live="polite"></p>
-        </form>
-
-        <div id="meal-output" class="meal-output hidden" aria-live="polite">
-          <div class="results-grid">
-            <article class="card">
-              <p class="label">Best meal now</p>
-              <h3 id="meal-title"></h3>
-              <p id="meal-description" class="result-copy"></p>
-            </article>
-
-            <article class="card">
-              <p class="label">If possible, do this next</p>
-              <h3 id="upgrade-title"></h3>
-              <p id="upgrade-description" class="result-copy"></p>
-            </article>
-
-            <article class="card">
-              <p class="label">Missing nutrients to watch</p>
-              <div id="nutrient-gaps" class="chip-wrap"></div>
-              <p id="recognized-foods" class="meta"></p>
-            </article>
-          </div>
-          <div class="cta-row">
-            <button id="speak-meal" type="button" class="btn btn-ghost">Play meal summary</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="resources" class="panel reveal">
-        <div class="panel-head">
-          <h2>Nearby support</h2>
-          <p>Type your city to find practical help close to you.</p>
-        </div>
-
-        <form id="resource-form" class="resource-form" novalidate>
-          <label class="field">
-            <span>City</span>
-            <input id="city" name="city" type="text" placeholder="Example: Los Angeles" required />
-          </label>
-          <button type="submit" class="btn btn-primary">Find support now</button>
-        </form>
-
-        <div id="resource-results" class="resource-results" aria-live="polite"></div>
-      </section>
-    </main>
-
-    <footer class="site-footer container">
-      <p>
-        NutriPath is a decision-support tool, not emergency medical care. If symptoms become severe,
-        seek urgent care or call emergency services.
-      </p>
-    </footer>
-  </body>
+ <script src="./app.js"></script>
+ </body>
 </html>
