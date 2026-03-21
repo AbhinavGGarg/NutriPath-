@@ -145,7 +145,7 @@
       const hashTab = getTabFromHash();
       if (hashTab) {
         setActive(hashTab, { syncHash: false, syncQuery: false });
-        setFocusMode(false);
+        setFocusMode(!!options.focusedMode);
         return true;
       }
 
@@ -1724,7 +1724,7 @@
     useHash: true,
     queryParam: 'tool',
     allowOverview: false,
-    focusedMode: false,
+    focusedMode: true,
     focusHideSelectors: ['#tool-next-steps', '#voice-support'],
   });
   initToolTabs('recipe-tools-shell', {
@@ -1732,7 +1732,7 @@
     useHash: false,
     queryParam: 'recipeTool',
     allowOverview: false,
-    focusedMode: false,
+    focusedMode: true,
     focusHideSelectors: ['#meal-rescue-builder', '#meal-links'],
   });
 

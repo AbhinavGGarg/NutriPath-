@@ -1031,16 +1031,16 @@ input[list]::-webkit-calendar-picker-indicator {
 }
 
 .tool-panel {
-  display: none;
+  display: none !important;
 }
 
 .tool-panel.is-active {
-  display: grid;
+  display: grid !important;
   animation: panelFade 0.22s ease;
 }
 
 .tool-tabs-shell.overview-mode .tool-panel {
-  display: grid;
+  display: grid !important;
   animation: none;
 }
 
