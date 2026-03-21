@@ -11,6 +11,30 @@
  guestHistory: 'nutriGuestHistoryV1',
  guestCurrent: 'nutriGuestCurrentV1'
  };
+ const AUTO_TRANSLATE_CACHE_KEY = 'nutriAutoTranslateCacheV1';
+ const AUTO_TRANSLATE_API = 'https://api.mymemory.translated.net/get';
+ const AUTO_TRANSLATE_LANG_MAP = {
+ en: 'en',
+ es: 'es',
+ fr: 'fr',
+ pt: 'pt',
+ ar: 'ar',
+ hi: 'hi',
+ bn: 'bn',
+ sw: 'sw',
+ zh: 'zh-CN',
+ ur: 'ur',
+ ru: 'ru',
+ de: 'de',
+ ja: 'ja',
+ ko: 'ko',
+ tr: 'tr',
+ it: 'it',
+ id: 'id',
+ vi: 'vi',
+ th: 'th',
+ fa: 'fa',
+ };
 
  const UI_LANGS = [
  { code: 'en', label: 'English', native: 'English' },
@@ -7066,13 +7090,214 @@
  }
  }
 
+ let autoTranslateCache = parseJSON(localStorage.getItem(AUTO_TRANSLATE_CACHE_KEY), {});
+ if (!autoTranslateCache || typeof autoTranslateCache !== 'object') autoTranslateCache = {};
+ const pendingAutoPhrase = new Map();
+ const pendingAutoKey = new Set();
+ let autoRefreshTimer = null;
+ let autoDomTimer = null;
+ let autoDomObserver = null;
+ let autoDomApplying = false;
+ let autoDomRun = 0;
+ const autoTextSource = new WeakMap();
+
  function formatText(template, vars) {
  return String(template).replace(/\{(\w+)\}/g, (_, key) => String(vars?.[key] ?? ''));
+ }
+
+ function resolveAutoLangCode(code) {
+ return AUTO_TRANSLATE_LANG_MAP[code] || String(code || 'en');
+ }
+
+ function hasOwnKey(obj, key) {
+ return Boolean(obj && Object.prototype.hasOwnProperty.call(obj, key));
+ }
+
+ function getCachedAutoTranslation(lang, sourceText) {
+ const langBucket = autoTranslateCache[lang];
+ if (!langBucket || typeof langBucket !== 'object') return null;
+ return langBucket[sourceText] || null;
+ }
+
+ function setCachedAutoTranslation(lang, sourceText, translatedText) {
+ if (!autoTranslateCache[lang] || typeof autoTranslateCache[lang] !== 'object') {
+ autoTranslateCache[lang] = {};
+ }
+ autoTranslateCache[lang][sourceText] = translatedText;
+ localStorage.setItem(AUTO_TRANSLATE_CACHE_KEY, JSON.stringify(autoTranslateCache));
+ }
+
+ async function fetchAutoTranslation(sourceText, lang) {
+ if (!sourceText || !lang || lang === 'en') return sourceText;
+ const cached = getCachedAutoTranslation(lang, sourceText);
+ if (cached) return cached;
+
+ const requestId = `${lang}::${sourceText}`;
+ if (pendingAutoPhrase.has(requestId)) return pendingAutoPhrase.get(requestId);
+
+ const sourceCode = 'en';
+ const targetCode = resolveAutoLangCode(lang);
+ const url = `${AUTO_TRANSLATE_API}?q=${encodeURIComponent(sourceText)}&langpair=${encodeURIComponent(sourceCode)}|${encodeURIComponent(targetCode)}`;
+
+ const task = fetch(url)
+ .then((response) => response.ok ? response.json() : null)
+ .then((payload) => {
+ const translated = String(payload?.responseData?.translatedText || '').trim();
+ if (!translated) return sourceText;
+ setCachedAutoTranslation(lang, sourceText, translated);
+ return translated;
+ })
+ .catch(() => sourceText)
+ .finally(() => pendingAutoPhrase.delete(requestId));
+
+ pendingAutoPhrase.set(requestId, task);
+ return task;
+ }
+
+ function scheduleUiRefresh() {
+ if (autoRefreshTimer) window.clearTimeout(autoRefreshTimer);
+ autoRefreshTimer = window.setTimeout(() => {
+ autoRefreshTimer = null;
+ applyGlobalUi();
+ }, 120);
+ }
+
+ function queueMissingKeyTranslation(key) {
+ if (currentLang === 'en') return;
+ if (!hasOwnKey(I18N.en, key)) return;
+ if (hasOwnKey(I18N[currentLang], key)) return;
+
+ const marker = `${currentLang}:${key}`;
+ if (pendingAutoKey.has(marker)) return;
+ pendingAutoKey.add(marker);
+
+ const sourceText = String(I18N.en[key] || '').trim();
+ fetchAutoTranslation(sourceText, currentLang)
+ .then((translated) => {
+ if (!translated || translated === sourceText) return;
+ if (!I18N[currentLang]) I18N[currentLang] = {};
+ I18N[currentLang][key] = translated;
+ scheduleUiRefresh();
+ })
+ .finally(() => {
+ pendingAutoKey.delete(marker);
+ });
+ }
+
+ function normalizeAutoText(value) {
+ return String(value || '').replace(/\s+/g, ' ').trim();
+ }
+
+ function shouldAutoTranslateElement(el, source) {
+ if (!el || !source) return false;
+ if (el.dataset?.i18n || el.dataset?.i18nPlaceholder || el.dataset?.i18nTitle) return false;
+ if (el.closest && el.closest('script,style,pre,code,[data-no-auto-translate]')) return false;
+ if (el.id === 'year') return false;
+ if (source.length < 2 || source.length > 180) return false;
+ if (!/[A-Za-z]/.test(source)) return false;
+ if (/^https?:\/\//i.test(source)) return false;
+ if (source === 'NutriPath') return false;
+ return true;
+ }
+
+ function collectAutoDomTargets(root = document) {
+ const textTargets = [];
+ const placeholderTargets = [];
+ const scopes = root.querySelectorAll('main, footer');
+
+ scopes.forEach((scope) => {
+ const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, null);
+ let textNode = walker.nextNode();
+ while (textNode) {
+ const parent = textNode.parentElement;
+ const source = normalizeAutoText(autoTextSource.get(textNode) || textNode.nodeValue);
+ if (parent && shouldAutoTranslateElement(parent, source)) {
+ if (!autoTextSource.has(textNode)) autoTextSource.set(textNode, source);
+ textTargets.push({ node: textNode, source: autoTextSource.get(textNode) });
+ }
+ textNode = walker.nextNode();
+ }
+ });
+
+ root.querySelectorAll('main input[placeholder], main textarea[placeholder]').forEach((el) => {
+ if (el.dataset.i18nPlaceholder) return;
+ const source = normalizeAutoText(el.dataset.i18nAutoPlaceholderSource || el.placeholder);
+ if (!shouldAutoTranslateElement(el, source)) return;
+ if (!el.dataset.i18nAutoPlaceholderSource) el.dataset.i18nAutoPlaceholderSource = source;
+ placeholderTargets.push({ node: el, source: el.dataset.i18nAutoPlaceholderSource });
+ });
+
+ return { textTargets, placeholderTargets };
+ }
+
+ async function autoTranslateUnkeyedDom(root = document) {
+ const runId = ++autoDomRun;
+ const { textTargets, placeholderTargets } = collectAutoDomTargets(root);
+ if (!textTargets.length && !placeholderTargets.length) return;
+
+ const applySource = currentLang === 'en';
+ if (applySource) {
+ textTargets.forEach((target) => {
+ if (normalizeAutoText(target.node.nodeValue) !== target.source) {
+ target.node.nodeValue = target.source;
+ }
+ });
+ placeholderTargets.forEach((target) => {
+ if (normalizeAutoText(target.node.placeholder) !== target.source) {
+ target.node.placeholder = target.source;
+ }
+ });
+ return;
+ }
+
+ const sources = [...new Set([...textTargets.map((item) => item.source), ...placeholderTargets.map((item) => item.source)])];
+ const translations = new Map();
+ for (const source of sources.slice(0, 220)) {
+ const translated = await fetchAutoTranslation(source, currentLang);
+ translations.set(source, translated || source);
+ if (runId !== autoDomRun) return;
+ }
+
+ if (runId !== autoDomRun) return;
+ autoDomApplying = true;
+ textTargets.forEach((target) => {
+ const translated = translations.get(target.source) || target.source;
+ if (normalizeAutoText(target.node.nodeValue) !== translated) {
+ target.node.nodeValue = translated;
+ }
+ });
+ placeholderTargets.forEach((target) => {
+ const translated = translations.get(target.source) || target.source;
+ if (normalizeAutoText(target.node.placeholder) !== translated) {
+ target.node.placeholder = translated;
+ }
+ });
+ autoDomApplying = false;
+ }
+
+ function scheduleAutoDomTranslation() {
+ if (autoDomTimer) window.clearTimeout(autoDomTimer);
+ autoDomTimer = window.setTimeout(() => {
+ autoDomTimer = null;
+ autoTranslateUnkeyedDom(document);
+ }, 160);
+ }
+
+ function initAutoDomObserver() {
+ if (autoDomObserver || !document.body) return;
+ autoDomObserver = new MutationObserver(() => {
+ if (autoDomApplying || currentLang === 'en') return;
+ scheduleAutoDomTranslation();
+ });
+ autoDomObserver.observe(document.body, { childList: true, subtree: true });
  }
 
  function t(key, vars) {
  const dict = I18N[currentLang] || I18N.en;
  const fallback = I18N.en[key] || key;
+ if (currentLang !== 'en' && !hasOwnKey(dict, key) && hasOwnKey(I18N.en, key)) {
+ queueMissingKeyTranslation(key);
+ }
  return formatText(dict[key] || fallback, vars);
  }
 
@@ -7086,18 +7311,27 @@
  root.querySelectorAll('[data-i18n]').forEach((el) => {
  const key = el.dataset.i18n;
  if (!hasTranslationKey(key)) return;
+ if (currentLang !== 'en' && !hasOwnKey(I18N[currentLang], key)) {
+ queueMissingKeyTranslation(key);
+ }
  el.textContent = t(key);
  });
 
  root.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
  const key = el.dataset.i18nPlaceholder;
  if (!hasTranslationKey(key)) return;
+ if (currentLang !== 'en' && !hasOwnKey(I18N[currentLang], key)) {
+ queueMissingKeyTranslation(key);
+ }
  if ('placeholder' in el) el.placeholder = t(key);
  });
 
  root.querySelectorAll('[data-i18n-title]').forEach((el) => {
  const key = el.dataset.i18nTitle;
  if (!hasTranslationKey(key)) return;
+ if (currentLang !== 'en' && !hasOwnKey(I18N[currentLang], key)) {
+ queueMissingKeyTranslation(key);
+ }
  el.title = t(key);
  });
 
@@ -7293,6 +7527,8 @@
  applyTranslations(document);
  createAuthButtons();
  createLanguageWidget();
+ initAutoDomObserver();
+ scheduleAutoDomTranslation();
  }
 
  if ('serviceWorker' in navigator) {
