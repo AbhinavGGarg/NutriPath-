@@ -1252,6 +1252,12 @@
     const chatInput = document.getElementById('recipe-chat-input');
     const chatBtn = document.getElementById('recipe-chat-btn');
     const chatResult = document.getElementById('recipe-chat-result');
+    const remixChatLog = document.getElementById('recipe-remix-chat-log');
+    const remixInput = document.getElementById('recipe-remix-input');
+    const remixSendBtn = document.getElementById('recipe-remix-send');
+    const remixResetBtn = document.getElementById('recipe-remix-reset');
+    const remixRegenerateBtn = document.getElementById('recipe-remix-regenerate');
+    const remixResult = document.getElementById('recipe-remix-result');
 
     function setLoading(node, isLoading, text = 'Loading...') {
       if (!node) return;
@@ -1353,6 +1359,300 @@
       engine.update({ title, summary, steps });
       voice.setLatest(voiceSummary || summary);
     }
+
+    function initSmartRemixAssistant() {
+      if (!remixChatLog || !remixInput || !remixSendBtn || !remixResetBtn || !remixRegenerateBtn || !remixResult) return;
+
+      const remixState = {
+        food: '',
+        itemDetails: '',
+        preference: '',
+        goals: '',
+      };
+      let remixStep = 'food';
+      let remixVariant = 0;
+      let latestRemixOutput = null;
+
+      function containsAny(text, list) {
+        return list.some((item) => text.includes(item));
+      }
+
+      function chooseByVariant(list, variantIndex) {
+        if (!Array.isArray(list) || !list.length) return '';
+        return list[Math.abs(variantIndex) % list.length];
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function nextPrompt() {
+        if (remixStep === 'food') return 'Tell me a food or restaurant you want to remix.';
+        if (remixStep === 'itemDetails') return 'What exactly are you craving from there? Include item, spice level, and sides.';
+        if (remixStep === 'preference') return 'What matters more for this remix: taste or health balance?';
+        if (remixStep === 'goals') return 'Any goals for this version? Example: high protein, lower calories, lower fat.';
+        return 'Use Regenerate version or Start over.';
+      }
+
+      function updatePlaceholder() {
+        remixInput.placeholder = nextPrompt();
+      }
+
+      function addMessage(role, text) {
+        const node = document.createElement('div');
+        node.className = `remix-msg ${role === 'user' ? 'user' : 'assistant'}`;
+        node.textContent = text;
+        remixChatLog.appendChild(node);
+        remixChatLog.scrollTop = remixChatLog.scrollHeight;
+      }
+
+      function inferDishProfile(payload) {
+        const combined = normalizeText(`${payload.food} ${payload.itemDetails}`);
+        const goalsText = normalizeText(payload.goals);
+        const preferenceText = normalizeText(payload.preference);
+
+        let dishType = 'plate';
+        if (containsAny(combined, ['slider', 'sandwich', 'burger'])) dishType = 'sandwich';
+        else if (containsAny(combined, ['taco'])) dishType = 'taco';
+        else if (containsAny(combined, ['burrito', 'wrap'])) dishType = 'wrap';
+        else if (containsAny(combined, ['pizza'])) dishType = 'pizza';
+        else if (containsAny(combined, ['noodle', 'ramen', 'pasta'])) dishType = 'noodle';
+        else if (containsAny(combined, ['bowl', 'rice bowl'])) dishType = 'bowl';
+
+        const vegetarian = containsAny(combined, ['vegetarian', 'vegan', 'plant based', 'plant-based', 'meatless']);
+        let proteinChoices = ['chicken breast'];
+        if (vegetarian) proteinChoices = ['extra-firm tofu', 'black beans'];
+        else if (containsAny(combined, ['beef', 'burger', 'steak'])) proteinChoices = ['93% lean ground turkey', '93% lean ground beef'];
+        else if (containsAny(combined, ['salmon', 'fish', 'tuna', 'shrimp'])) proteinChoices = ['salmon fillet', 'canned tuna'];
+        else if (containsAny(combined, ['chicken', 'tender', 'wing'])) proteinChoices = ['chicken breast', 'chicken thigh (trimmed)'];
+
+        const spicy = containsAny(combined, ['spicy', 'hot', 'nashville', 'cayenne', 'buffalo', 'jalapeno', 'chili']);
+        const crispy = containsAny(combined, ['fried', 'crispy', 'crunchy', 'tender', 'breaded', 'fries']);
+        const hasFries = containsAny(combined, ['fries', 'fry', 'wedges', 'chips']);
+
+        const highProtein = containsAny(goalsText, ['high protein', 'more protein', 'protein']);
+        const lowerCalories = containsAny(goalsText, ['lower calories', 'low calorie', 'calorie']);
+        const lowerFat = containsAny(goalsText, ['lower fat', 'low fat', 'less fat']);
+
+        const flavorWeight = containsAny(preferenceText, ['taste', 'flavor', 'taste first']) ? 'taste' : containsAny(preferenceText, ['health', 'balance']) ? 'balance' : 'balance';
+
+        return {
+          combined,
+          dishType,
+          protein: proteinChoices,
+          spicy,
+          crispy,
+          hasFries,
+          highProtein,
+          lowerCalories,
+          lowerFat,
+          flavorWeight,
+        };
+      }
+
+      function buildRemixOutput(payload, variantIndex) {
+        const profile = inferDishProfile(payload);
+        const protein = chooseByVariant(profile.protein, variantIndex);
+        const method = profile.crispy ? chooseByVariant(['air-fried', 'oven-crisped'], variantIndex) : chooseByVariant(['grilled', 'oven-roasted'], variantIndex);
+        const spiceBlend = profile.spicy ? 'smoked paprika, cayenne, garlic powder, black pepper' : 'paprika, garlic powder, black pepper, lemon zest';
+
+        const baseByDish = {
+          sandwich: chooseByVariant(['whole wheat slider buns', 'whole grain sandwich buns'], variantIndex),
+          taco: chooseByVariant(['corn tortillas', 'high-fiber tortillas'], variantIndex),
+          wrap: chooseByVariant(['whole wheat wraps', 'high-fiber tortillas'], variantIndex),
+          pizza: chooseByVariant(['whole wheat pita', 'high-protein flatbread'], variantIndex),
+          noodle: chooseByVariant(['chickpea pasta', 'whole wheat noodles'], variantIndex),
+          bowl: chooseByVariant(['brown rice', 'quinoa'], variantIndex),
+          plate: chooseByVariant(['brown rice', 'roasted potatoes'], variantIndex),
+        };
+
+        const base = baseByDish[profile.dishType] || 'whole grains';
+        const side = profile.hasFries ? chooseByVariant(['baked potato wedges', 'air-roasted sweet potato fries'], variantIndex) : chooseByVariant(['quick cabbage slaw', 'roasted frozen vegetables'], variantIndex);
+        const sauce = profile.spicy ? chooseByVariant(['Greek yogurt hot sauce', 'Greek yogurt chili-lime sauce'], variantIndex) : chooseByVariant(['Greek yogurt herb sauce', 'yogurt lemon-garlic sauce'], variantIndex);
+
+        const styleWordByDish = {
+          sandwich: 'sliders',
+          taco: 'tacos',
+          wrap: 'wraps',
+          pizza: 'flatbread pizza',
+          noodle: 'noodle bowl',
+          bowl: 'grain bowl',
+          plate: 'protein plate',
+        };
+        const styleWord = styleWordByDish[profile.dishType] || 'meal';
+
+        const ingredientPool = [protein, base, 'Greek yogurt', spiceBlend, side.includes('potato') ? 'potatoes' : 'shredded cabbage', 'olive oil spray', profile.spicy ? 'hot sauce' : 'lemon juice', profile.spicy ? 'pickle slices' : 'fresh herbs'];
+        const ingredients = ingredientPool.slice(0, 8);
+
+        const steps = [
+          `Season ${protein} with ${spiceBlend} and a spoon of Greek yogurt.`,
+          `${method[0].toUpperCase()}${method.slice(1)} the protein until cooked and browned.`,
+          `Cook the base (${base}) and prep ${side}.`,
+          `Mix a quick ${sauce}, then warm the bread/tortillas if using.`,
+          `Assemble the ${styleWord} and finish with sauce for heat and texture.`,
+        ].slice(0, 5);
+
+        let calorieRange = [470, 620];
+        if (profile.dishType === 'taco' || profile.dishType === 'wrap') calorieRange = [430, 580];
+        if (profile.dishType === 'bowl') calorieRange = [500, 680];
+        if (profile.dishType === 'noodle') calorieRange = [520, 700];
+        if (profile.lowerCalories) calorieRange = [calorieRange[0] - 70, calorieRange[1] - 90];
+        calorieRange = [clamp(calorieRange[0], 320, 900), clamp(calorieRange[1], 380, 980)];
+
+        let proteinRange = profile.protein[0].includes('tofu') || profile.protein[0].includes('bean') ? [22, 32] : [30, 42];
+        if (profile.highProtein) proteinRange = [proteinRange[0] + 5, proteinRange[1] + 8];
+        proteinRange = [clamp(proteinRange[0], 18, 60), clamp(proteinRange[1], 24, 72)];
+
+        const fatLabel = profile.lowerFat ? 'lower to moderate' : profile.crispy ? 'moderate' : 'moderate to low';
+
+        const smartSwap = `${method} ${profile.spicy ? 'spicy ' : ''}${protein} ${styleWord} with ${sauce} and ${side}`;
+        const whyBetterParts = ['Uses less deep-frying and a lighter sauce to reduce excess oil'];
+        if (profile.highProtein) whyBetterParts.push('keeps protein higher for better fullness');
+        if (profile.lowerCalories) whyBetterParts.push('trims calories without removing the main craving format');
+        if (profile.lowerFat) whyBetterParts.push('keeps fat more controlled');
+
+        const keepTheVibeParts = [];
+        if (profile.spicy) keepTheVibeParts.push('the heat stays strong');
+        if (profile.crispy) keepTheVibeParts.push('you still get a crispy bite');
+        keepTheVibeParts.push(`it keeps the same ${styleWord} feel`);
+        if (profile.flavorWeight === 'taste') keepTheVibeParts.push('flavor is prioritized first, with balanced upgrades');
+
+        return {
+          smartSwap,
+          homemadeRemix: {
+            ingredients,
+            steps,
+          },
+          whyBetter: `${whyBetterParts.join(', ')}.`,
+          keepTheVibe: `${keepTheVibeParts.join(', ')}.`,
+          nutritionEstimate: {
+            calories: `${calorieRange[0]}-${calorieRange[1]}`,
+            protein: `${proteinRange[0]}-${proteinRange[1]}g`,
+            fat: fatLabel,
+          },
+        };
+      }
+
+      function renderRemixOutput(output) {
+        const summary = `
+          <div class="recipe-mini-card">
+            <strong>Smart swap:</strong> ${escapeHtml(output.smartSwap)}
+          </div>
+          <div class="recipe-mini-card">
+            <strong>Why better:</strong> ${escapeHtml(output.whyBetter)}<br />
+            <strong>Keep the vibe:</strong> ${escapeHtml(output.keepTheVibe)}<br />
+            <strong>Estimated nutrition:</strong> ${escapeHtml(output.nutritionEstimate.calories)} calories · ${escapeHtml(output.nutritionEstimate.protein)} protein · ${escapeHtml(output.nutritionEstimate.fat)} fat
+          </div>
+          <pre class="recipe-remix-json">${escapeHtml(JSON.stringify(output, null, 2))}</pre>
+        `;
+        remixResult.innerHTML = summary;
+      }
+
+      function publishRemixOutput(output) {
+        latestRemixOutput = output;
+        remixRegenerateBtn.disabled = false;
+        renderRemixOutput(output);
+
+        updateEngine(
+          'Smart Food Remix Assistant',
+          `Generated a practical remix for ${remixState.itemDetails || remixState.food}.`,
+          [
+            { title: 'Try this smart swap tonight', desc: 'Start with the quick version before making bigger changes.', cta: 'Use this remix', href: './meal-builder.html?recipeTool=remix#recipe-widget' },
+            { title: 'Find matching recipes', desc: 'Run ingredient search using remix ingredients.', cta: 'Ingredients search', href: './meal-builder.html?recipeTool=ingredients#recipe-widget' },
+            { title: 'Tune for budget', desc: 'Use Budget Planner if price is still too high.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
+          ],
+          `Smart remix ready. ${output.keepTheVibe}`,
+        );
+      }
+
+      function resetConversation() {
+        remixState.food = '';
+        remixState.itemDetails = '';
+        remixState.preference = '';
+        remixState.goals = '';
+        remixStep = 'food';
+        remixVariant = 0;
+        latestRemixOutput = null;
+        remixResult.innerHTML = '';
+        remixChatLog.innerHTML = '';
+        remixRegenerateBtn.disabled = true;
+        updatePlaceholder();
+        addMessage('assistant', 'Tell me a food or restaurant you want to remix.');
+      }
+
+      function handleUserMessage(rawText) {
+        const text = String(rawText || '').trim();
+        if (!text) return;
+        addMessage('user', text);
+
+        if (remixStep === 'food') {
+          remixState.food = text;
+          remixStep = 'itemDetails';
+          updatePlaceholder();
+          addMessage('assistant', 'What exactly are you craving from there? Include item, spice level, and sides.');
+          return;
+        }
+
+        if (remixStep === 'itemDetails') {
+          remixState.itemDetails = text;
+          remixStep = 'preference';
+          updatePlaceholder();
+          addMessage('assistant', 'What matters more for this remix: taste or health balance?');
+          return;
+        }
+
+        if (remixStep === 'preference') {
+          remixState.preference = text;
+          remixStep = 'goals';
+          updatePlaceholder();
+          addMessage('assistant', 'Any goals for this version? Example: high protein, lower calories, lower fat.');
+          return;
+        }
+
+        if (remixStep === 'goals') {
+          remixState.goals = text;
+          remixStep = 'done';
+          updatePlaceholder();
+          const output = buildRemixOutput(remixState, remixVariant);
+          publishRemixOutput(output);
+          addMessage('assistant', 'Done. I built a healthier remix that keeps the same craving vibe.');
+          return;
+        }
+
+        addMessage('assistant', 'Use Regenerate version for another option, or Start over for a new craving.');
+      }
+
+      remixSendBtn.addEventListener('click', () => {
+        const value = remixInput.value;
+        remixInput.value = '';
+        handleUserMessage(value);
+      });
+
+      remixInput.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        remixSendBtn.click();
+      });
+
+      remixResetBtn.addEventListener('click', () => {
+        resetConversation();
+      });
+
+      remixRegenerateBtn.addEventListener('click', () => {
+        if (!latestRemixOutput || remixStep !== 'done') {
+          addMessage('assistant', 'Finish one remix first, then regenerate another version.');
+          return;
+        }
+        remixVariant += 1;
+        const output = buildRemixOutput(remixState, remixVariant);
+        publishRemixOutput(output);
+        addMessage('assistant', 'Here is another version using the same craving and goals.');
+      });
+
+      resetConversation();
+    }
+
+    initSmartRemixAssistant();
 
     ingredientsBtn?.addEventListener('click', async () => {
       const ingredients = String(ingredientsInput.value || '').trim();

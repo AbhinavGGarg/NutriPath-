@@ -7253,14 +7253,11 @@
  const user = currentUser();
 
  if (user) {
- const userTag = document.createElement('span');
- userTag.className = 'auth-user';
- userTag.textContent = `${t('label_signed_in')}: ${user.name || user.email}`;
-
  const accountLink = document.createElement('a');
  accountLink.className = 'btn btn-secondary btn-small';
  accountLink.href = './auth.html';
  accountLink.textContent = t('btn_account');
+ accountLink.title = `${t('label_signed_in')}: ${user.name || user.email}`;
 
  const logoutButton = document.createElement('button');
  logoutButton.type = 'button';
@@ -7271,7 +7268,6 @@
  window.location.reload();
  });
 
- controls.appendChild(userTag);
  controls.appendChild(accountLink);
  controls.appendChild(logoutButton);
  } else {
