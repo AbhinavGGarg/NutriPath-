@@ -56,15 +56,12 @@
 
     buttons.forEach((button) => {
       button.setAttribute('role', 'tab');
-      if (options.openInNewTab && button.tagName === 'A') {
-        button.setAttribute('target', '_blank');
-        button.setAttribute('rel', 'noopener noreferrer');
-      }
     });
 
     function setFocusMode(enabled) {
+      const allowOverview = options.allowOverview !== false;
       shell.classList.toggle('single-tool-view', enabled);
-      shell.classList.toggle('overview-mode', !enabled);
+      shell.classList.toggle('overview-mode', allowOverview && !enabled);
       focusActions.forEach((node) => node.classList.toggle('hide', !enabled));
       if (Array.isArray(options.focusHideSelectors)) {
         options.focusHideSelectors.forEach((selector) => {
@@ -126,12 +123,11 @@
     buttons.forEach((button) => {
       button.addEventListener('click', (event) => {
         if (!button.dataset.tab) return;
-        if (options.openInNewTab && button.tagName === 'A') return;
         if (options.queryParam) {
           if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
           event.preventDefault();
           setActive(button.dataset.tab, { syncHash: !!options.useHash, syncQuery: true });
-          setFocusMode(true);
+          setFocusMode(!!options.focusedMode);
           return;
         }
         setActive(button.dataset.tab, { syncHash: !!options.useHash });
@@ -142,7 +138,7 @@
       const queryTab = getTabFromQuery();
       if (queryTab) {
         setActive(queryTab, { syncHash: false, syncQuery: false });
-        setFocusMode(true);
+        setFocusMode(!!options.focusedMode);
         return true;
       }
 
@@ -1727,14 +1723,16 @@
     defaultTab: 'risk',
     useHash: true,
     queryParam: 'tool',
-    openInNewTab: true,
+    allowOverview: false,
+    focusedMode: false,
     focusHideSelectors: ['#tool-next-steps', '#voice-support'],
   });
   initToolTabs('recipe-tools-shell', {
     defaultTab: 'ingredients',
     useHash: false,
     queryParam: 'recipeTool',
-    openInNewTab: true,
+    allowOverview: false,
+    focusedMode: false,
     focusHideSelectors: ['#meal-rescue-builder', '#meal-links'],
   });
 
