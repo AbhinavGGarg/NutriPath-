@@ -31,11 +31,23 @@ NutriPath reads keys from `window.NUTRIPATH_KEYS` in `runtime-config.js`.
 1. Copy `runtime-config.example.js` -> `runtime-config.js`.
 2. Add keys locally:
    - `voiceApiKey` for `https://dev.voice.ai/api/v1`
-   - `recipeApiKey` for `https://api.spoonacular.com`
+   - `recipeApiKey` for `https://api.spoonacular.com` (optional local fallback only)
 
 If keys are missing, the app falls back gracefully:
 - Voice: browser speech synthesis
-- Recipe API: user-facing setup warning
+- Recipe API: secure server proxy (recommended in production)
+
+## Spoonacular proxy (recommended for real users)
+
+Recipe tools now call a Vercel serverless endpoint at `/api/spoonacular`, so end users do not need to paste API keys.
+
+Set this environment variable in Vercel project settings:
+
+- `SPOONACULAR_API_KEY`
+
+Local development fallback:
+
+- If the proxy is unavailable locally, the app can still use `runtime-config.js` `recipeApiKey`.
 
 ## Deploy to Vercel
 

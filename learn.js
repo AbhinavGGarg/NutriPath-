@@ -1,36 +1,14 @@
 (function () {
   const t = (key, vars) => (window.NutriApp?.t ? window.NutriApp.t(key, vars) : key);
-  const INTEGRATION_STORAGE_KEYS = {
-    voiceApiKey: 'nutripath_voice_api_key',
-    recipeApiKey: 'nutripath_recipe_api_key',
-  };
-
-  function readStoredKey(name) {
-    try {
-      return localStorage.getItem(INTEGRATION_STORAGE_KEYS[name] || '') || '';
-    } catch {
-      return '';
-    }
-  }
-
-  function persistStoredKey(name, value) {
-    try {
-      const key = INTEGRATION_STORAGE_KEYS[name];
-      if (!key) return;
-      if (value) localStorage.setItem(key, value);
-      else localStorage.removeItem(key);
-    } catch {
-      // Ignore storage write failures in restricted browsers.
-    }
-  }
 
   const runtimeKeys = window.NUTRIPATH_KEYS || {};
   const INTEGRATION_KEYS = {
-    voiceApiKey: runtimeKeys.voiceApiKey || readStoredKey('voiceApiKey'),
-    recipeApiKey: runtimeKeys.recipeApiKey || readStoredKey('recipeApiKey'),
+    voiceApiKey: runtimeKeys.voiceApiKey || '',
+    recipeApiKey: runtimeKeys.recipeApiKey || '',
   };
   const VOICE_API_BASE = 'https://dev.voice.ai/api/v1';
   const SPOONACULAR_API_BASE = 'https://api.spoonacular.com';
+  const SPOONACULAR_PROXY_PATH = '/api/spoonacular';
 
   function escapeHtml(value) {
     return String(value || '')
@@ -1245,10 +1223,6 @@
     const ingredientsInput = document.getElementById('recipe-ingredients-input');
     if (!ingredientsInput) return;
 
-    const recipeApiKeyInput = document.getElementById('recipe-api-key-input');
-    const recipeApiKeySaveBtn = document.getElementById('recipe-api-key-save');
-    const recipeApiKeyClearBtn = document.getElementById('recipe-api-key-clear');
-    const recipeApiKeyStatus = document.getElementById('recipe-api-key-status');
     const ingredientsBtn = document.getElementById('recipe-ingredients-btn');
     const ingredientsResult = document.getElementById('recipe-ingredients-result');
     const nutritionQuery = document.getElementById('recipe-nutrition-query');
@@ -1279,52 +1253,6 @@
     const chatBtn = document.getElementById('recipe-chat-btn');
     const chatResult = document.getElementById('recipe-chat-result');
 
-    function setRecipeApiStatus(text, type = 'ok') {
-      if (!recipeApiKeyStatus) return;
-      recipeApiKeyStatus.className = `small-text ${type === 'error' ? 'status-err' : 'status-ok'}`;
-      recipeApiKeyStatus.textContent = text;
-    }
-
-    function applyRecipeApiKey(value, persist = true) {
-      const next = String(value || '').trim();
-      INTEGRATION_KEYS.recipeApiKey = next;
-      if (persist) persistStoredKey('recipeApiKey', next);
-      if (recipeApiKeyInput) recipeApiKeyInput.value = next;
-      if (next) {
-        setRecipeApiStatus('Recipe API key saved. Nutrition search is ready.');
-      } else {
-        setRecipeApiStatus('Recipe API key cleared. Add a key to use recipe tools.', 'error');
-      }
-    }
-
-    const bootParams = new URLSearchParams(window.location.search);
-    const apiKeyFromQuery = String(bootParams.get('recipeApiKey') || '').trim();
-    if (apiKeyFromQuery) {
-      applyRecipeApiKey(apiKeyFromQuery, true);
-      bootParams.delete('recipeApiKey');
-      const cleanedQuery = bootParams.toString();
-      const cleanedUrl = `${window.location.pathname}${cleanedQuery ? `?${cleanedQuery}` : ''}${window.location.hash}`;
-      history.replaceState(null, '', cleanedUrl);
-    } else if (INTEGRATION_KEYS.recipeApiKey) {
-      if (recipeApiKeyInput) recipeApiKeyInput.value = INTEGRATION_KEYS.recipeApiKey;
-      setRecipeApiStatus('Recipe API key is loaded.');
-    } else {
-      setRecipeApiStatus('Add your Spoonacular API key to enable nutrition search.', 'error');
-    }
-
-    recipeApiKeySaveBtn?.addEventListener('click', () => {
-      const key = String(recipeApiKeyInput?.value || '').trim();
-      if (!key) {
-        setRecipeApiStatus('Enter a Spoonacular API key first.', 'error');
-        return;
-      }
-      applyRecipeApiKey(key, true);
-    });
-
-    recipeApiKeyClearBtn?.addEventListener('click', () => {
-      applyRecipeApiKey('', true);
-    });
-
     function setLoading(node, isLoading, text = 'Loading...') {
       if (!node) return;
       node.classList.toggle('is-loading', isLoading);
@@ -1348,9 +1276,37 @@
     }
 
     async function spoonFetch(path, { method = 'GET', params = {}, form = null } = {}) {
-      if (!INTEGRATION_KEYS.recipeApiKey) {
-        throw new Error('Recipe API key is missing. Add it in the Recipe API setup panel.');
+      const normalizedMethod = String(method || 'GET').toUpperCase();
+
+      // Primary path: secure server-side proxy so end users never need API keys.
+      try {
+        const proxyResponse = await fetch(SPOONACULAR_PROXY_PATH, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path,
+            method: normalizedMethod,
+            params,
+            form,
+          }),
+        });
+        const proxyPayload = await proxyResponse.json().catch(() => null);
+        if (!proxyResponse.ok) {
+          const rawMessage = proxyPayload?.error || proxyPayload?.message || '';
+          const message = String(rawMessage).includes('SPOONACULAR_API_KEY')
+            ? 'Recipe service is not configured yet. Please try again later.'
+            : rawMessage || `Recipe service failed (${proxyResponse.status})`;
+          throw new Error(message);
+        }
+        return proxyPayload;
+      } catch (proxyError) {
+        // Optional local fallback for development only.
+        if (!INTEGRATION_KEYS.recipeApiKey) {
+          const message = proxyError?.message || 'Recipe service is temporarily unavailable. Please try again.';
+          throw new Error(message);
+        }
       }
+
       const url = new URL(`${SPOONACULAR_API_BASE}${path}`);
       Object.entries(params).forEach(([key, value]) => {
         if (value === undefined || value === null || value === '') return;
@@ -1358,8 +1314,8 @@
       });
       url.searchParams.set('apiKey', INTEGRATION_KEYS.recipeApiKey);
 
-      const request = { method };
-      if (method !== 'GET' && form) {
+      const request = { method: normalizedMethod };
+      if (normalizedMethod !== 'GET' && form) {
         request.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
         request.body = new URLSearchParams(form).toString();
       }

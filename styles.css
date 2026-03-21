@@ -1174,19 +1174,6 @@ input[list]::-webkit-calendar-picker-indicator {
   margin-top: 0.9rem;
 }
 
-.recipe-key-panel {
-  margin-top: 0.8rem;
-  margin-bottom: 0.9rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-  background: var(--surface-soft);
-  padding: 0.75rem;
-}
-
-.recipe-key-panel #recipe-api-key-status {
-  margin: 0.45rem 0 0;
-}
-
 .recipe-tabs-shell {
   margin-top: 0.9rem;
 }
