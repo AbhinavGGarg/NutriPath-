@@ -28,9 +28,6 @@
  Enter foods your household has right now. NutriPath returns the best meal idea you can make today,
  likely nutrient gaps, low-cost foods to add next, and realistic pantry-friendly swaps.
  </p>
- <div class="cta-row">
- <a class="btn btn-secondary btn-small" href="./meal-builder.html?recipeTool=remix#recipe-widget">Open Smart Food Remix Assistant</a>
- </div>
  </section>
 
  <section class="section" id="meal-rescue-builder">
@@ -92,40 +89,25 @@
  <article class="card">
  <h3>Recipe Intelligence Widget</h3>
  <p class="small-text">
- Powered by Spoonacular. Use this to find recipes from current ingredients, search by nutrient needs, extract recipes
- from links, classify cuisine, generate meal plans, build shopping lists, run UPC lookups, detect foods in text, and use
- a simple recipe chatbot helper.
+ Powered by Spoonacular. Use this to search by nutrition needs, extract recipes from links, classify cuisine,
+ generate meal plans, and use a simple recipe chatbot helper.
  </p>
 
  <div class="tool-tabs-shell recipe-tabs-shell" id="recipe-tools-shell">
  <aside class="tool-tabs-nav recipe-tabs-nav" role="tablist" aria-label="Recipe tools">
- <a class="tool-tab-btn active" href="./meal-builder.html?recipeTool=ingredients#recipe-widget" data-tab="ingredients">Ingredients Search</a>
- <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=nutrition#recipe-widget" data-tab="nutrition">Nutrition Search</a>
+ <a class="tool-tab-btn active" href="./meal-builder.html?recipeTool=nutrition#recipe-widget" data-tab="nutrition">Nutrition Search</a>
  <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=extract#recipe-widget" data-tab="extract">Extract From URL</a>
  <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=classify#recipe-widget" data-tab="classify">Cuisine Classifier</a>
  <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=mealplan#recipe-widget" data-tab="mealplan">Meal Plan + Shopping</a>
- <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=upc#recipe-widget" data-tab="upc">UPC Lookup</a>
- <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=ner#recipe-widget" data-tab="ner">Food Detect</a>
- <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=fun#recipe-widget" data-tab="fun">Trivia + Jokes</a>
  <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=chat#recipe-widget" data-tab="chat">Recipe Helper</a>
- <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=remix#recipe-widget" data-tab="remix">Smart Food Remix</a>
+ <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=remix#recipe-widget" data-tab="remix">Fast Food Remix</a>
  </aside>
 
  <div class="tool-tabs-panels">
  <div class="tool-focus-actions hide" data-focus-actions>
  <a class="btn btn-secondary btn-small" href="./meal-builder.html#recipe-widget">View all recipe tools</a>
  </div>
- <article class="card recipe-tool tool-panel is-active" data-tool-tab="ingredients">
- <h4>What's In Your Fridge Search</h4>
- <div class="field">
- <label for="recipe-ingredients-input">Ingredients</label>
- <input id="recipe-ingredients-input" placeholder="e.g., rice, beans, eggs, spinach" />
- </div>
- <div class="cta-row"><button id="recipe-ingredients-btn" class="btn btn-primary btn-small" type="button">Find recipes</button></div>
- <div id="recipe-ingredients-result" class="recipe-result"></div>
- </article>
-
- <article class="card recipe-tool tool-panel" data-tool-tab="nutrition">
+ <article class="card recipe-tool tool-panel is-active" data-tool-tab="nutrition">
  <h4>Nutrition Requirement Search</h4>
  <div class="form-grid">
  <div class="field">
@@ -184,36 +166,6 @@
  <div id="recipe-meal-result" class="recipe-result"></div>
  </article>
 
- <article class="card recipe-tool tool-panel" data-tool-tab="upc">
- <h4>UPC Product Lookup (US)</h4>
- <div class="field">
- <label for="recipe-upc-input">UPC code</label>
- <input id="recipe-upc-input" placeholder="e.g., 041631000564" />
- </div>
- <div class="cta-row"><button id="recipe-upc-btn" class="btn btn-primary btn-small" type="button">Lookup</button></div>
- <div id="recipe-upc-result" class="recipe-result"></div>
- </article>
-
- <article class="card recipe-tool tool-panel" data-tool-tab="ner">
- <h4>Detect Food In Text (NER)</h4>
- <div class="field">
- <label for="recipe-ner-input">Text</label>
- <textarea id="recipe-ner-input" rows="3" placeholder="I had eggs, toast, and banana for breakfast."></textarea>
- </div>
- <div class="cta-row"><button id="recipe-ner-btn" class="btn btn-primary btn-small" type="button">Detect</button></div>
- <div id="recipe-ner-result" class="recipe-result"></div>
- </article>
-
- <article class="card recipe-tool tool-panel" data-tool-tab="fun">
- <h4>Food Trivia + Jokes</h4>
- <p class="small-text">Use this as engagement support while users build meal plans.</p>
- <div class="cta-row">
- <button id="recipe-trivia-btn" class="btn btn-secondary btn-small" type="button">Get trivia</button>
- <button id="recipe-joke-btn" class="btn btn-secondary btn-small" type="button">Get joke</button>
- </div>
- <div id="recipe-fun-result" class="recipe-result"></div>
- </article>
-
  <article class="card recipe-tool tool-panel" data-tool-tab="chat">
  <h4>Recipe Chatbot Helper</h4>
  <div class="field">
@@ -225,21 +177,43 @@
  </article>
 
  <article class="card recipe-tool tool-panel" data-tool-tab="remix">
- <h4>Smart Food Remix Assistant</h4>
+ <h4>Fast Food Remix</h4>
  <p class="small-text">
- Enter the food or restaurant you are craving. NutriPath asks quick follow-ups, then builds a healthier remix that keeps the same taste profile.
+ Answer these quick questions to get a healthier remake that keeps the same craving.
  </p>
- <div id="recipe-remix-chat-log" class="remix-chat-log" aria-live="polite"></div>
  <div class="form-grid">
  <div class="field">
- <label for="recipe-remix-input">Your response</label>
- <input id="recipe-remix-input" placeholder="Type your answer and press Enter" />
+ <label for="recipe-remix-restaurant">1) Which fast food place?</label>
+ <input id="recipe-remix-restaurant" placeholder="e.g., Dave's Hot Chicken, McDonald's, local burger spot" />
+ </div>
+ <div class="field">
+ <label for="recipe-remix-item">2) Which exact item are you craving?</label>
+ <input id="recipe-remix-item" placeholder="e.g., spicy slider, cauliflower burger, chicken wrap" />
+ </div>
+ <div class="field">
+ <label for="recipe-remix-diet">3) Any diet preference?</label>
+ <select id="recipe-remix-diet">
+ <option value="none">No preference</option>
+ <option value="vegetarian">Vegetarian</option>
+ <option value="vegan">Vegan</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="recipe-remix-priority">4) What matters most?</label>
+ <select id="recipe-remix-priority">
+ <option value="balanced">Balanced taste + health</option>
+ <option value="taste">Taste first</option>
+ <option value="health">Health first</option>
+ </select>
+ </div>
+ <div class="field">
+ <label for="recipe-remix-goals">5) Any goals?</label>
+ <input id="recipe-remix-goals" placeholder="e.g., lower calories, high protein, less oil" />
  </div>
  <div class="field" style="align-content: end;">
  <div class="cta-row">
- <button id="recipe-remix-send" class="btn btn-primary btn-small" type="button">Send</button>
- <button id="recipe-remix-reset" class="btn btn-secondary btn-small" type="button">Start over</button>
- <button id="recipe-remix-regenerate" class="btn btn-secondary btn-small" type="button" disabled>Regenerate version</button>
+ <button id="recipe-remix-generate" class="btn btn-primary btn-small" type="button">Generate Fast Food Remix</button>
+ <button id="recipe-remix-reset" class="btn btn-secondary btn-small" type="button">Reset</button>
  </div>
  </div>
  </div>
@@ -253,9 +227,9 @@
  <section class="section grid-2" id="meal-links">
  <article class="card">
  <h3>Need action tools?</h3>
- <p class="small-text">Use Action Hub to run risk checks, urgency escalation, claim checks, and budget recovery planning.</p>
+ <p class="small-text">Use Action Hub for urgency escalation, claim checks, and budget recovery planning.</p>
  <div class="cta-row">
- <a class="btn btn-secondary" href="./learn.html?tool=risk#tool-risk-checker">Open Action Hub</a>
+ <a class="btn btn-secondary" href="./learn.html?tool=budget#tool-budget-planner">Open Action Hub</a>
  <a class="btn btn-secondary" href="./learn.html?tool=claim#tool-claim-checker">Check a nutrition claim</a>
  </div>
  </article>

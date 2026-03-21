@@ -37,8 +37,7 @@
 
  <section class="section tool-tabs-shell" id="action-tools-shell">
  <aside class="tool-tabs-nav" role="tablist" aria-label="Action tools">
- <a class="tool-tab-btn active" href="./learn.html?tool=risk#tool-risk-checker" data-tab="risk">Risk Checker</a>
- <a class="tool-tab-btn" href="./learn.html?tool=budget#tool-budget-planner" data-tab="budget">Budget Planner</a>
+ <a class="tool-tab-btn active" href="./learn.html?tool=budget#tool-budget-planner" data-tab="budget">Budget Planner</a>
  <a class="tool-tab-btn" href="./learn.html?tool=pantry#tool-pantry-rescue" data-tab="pantry">Pantry Rescue</a>
  <a class="tool-tab-btn" href="./learn.html?tool=escalation#tool-escalation" data-tab="escalation">Urgency Escalation</a>
  <a class="tool-tab-btn" href="./learn.html?tool=claim#tool-claim-checker" data-tab="claim">Claim Checker</a>
@@ -48,50 +47,7 @@
  <div class="tool-focus-actions hide" data-focus-actions>
  <a class="btn btn-secondary btn-small" href="./learn.html">View all Action Hub tools</a>
  </div>
- <article class="card tool-card tool-panel is-active" id="tool-risk-checker" data-tool-tab="risk">
- <h3>Household Nutrition Risk Checker</h3>
- <p class="small-text">Quickly estimate whether a household member may be low, moderate, or high nutrition risk.</p>
- <div class="form-grid">
- <div class="field">
- <label for="risk-age-group">Age group</label>
- <select id="risk-age-group">
- <option value="child">Child</option>
- <option value="adult">Adult</option>
- <option value="older">Older adult</option>
- </select>
- </div>
- <div class="field">
- <label for="risk-food-context">Food context</label>
- <select id="risk-food-context">
- <option value="mixed">Mixed foods available</option>
- <option value="limited">Limited food at home</option>
- <option value="processed">Mostly processed foods</option>
- <option value="low_access">Low grocery access / transport barriers</option>
- </select>
- </div>
- </div>
- <p class="small-text" style="margin: 0.3rem 0 0.5rem;">Select warning signals:</p>
- <div class="checkbox-grid" id="risk-factor-grid">
- <label class="checkbox-item"><input type="checkbox" value="low_appetite" /> <span>Low appetite</span></label>
- <label class="checkbox-item"><input type="checkbox" value="weight_loss" /> <span>Recent weight loss</span></label>
- <label class="checkbox-item"><input type="checkbox" value="fatigue" /> <span>Fatigue / weakness</span></label>
- <label class="checkbox-item"><input type="checkbox" value="pale_skin" /> <span>Pale skin</span></label>
- <label class="checkbox-item"><input type="checkbox" value="swelling" /> <span>Swelling (edema)</span></label>
- <label class="checkbox-item"><input type="checkbox" value="diarrhea" /> <span>Frequent diarrhea</span></label>
- <label class="checkbox-item"><input type="checkbox" value="low_activity" /> <span>Low activity</span></label>
- <label class="checkbox-item"><input type="checkbox" value="dizziness" /> <span>Dizziness</span></label>
- <label class="checkbox-item"><input type="checkbox" value="confusion" /> <span>Confusion</span></label>
- <label class="checkbox-item"><input type="checkbox" value="trouble_chewing" /> <span>Trouble chewing</span></label>
- <label class="checkbox-item"><input type="checkbox" value="missed_meals" /> <span>Missed meals</span></label>
- <label class="checkbox-item"><input type="checkbox" value="afford_protein" /> <span>Difficulty affording protein foods</span></label>
- </div>
- <div class="cta-row" style="margin-top: 0.75rem;">
- <button id="risk-check-btn" class="btn btn-primary" type="button">Check risk now</button>
- </div>
- <div id="risk-check-result" class="tool-result hide"></div>
- </article>
-
- <article class="card tool-card tool-panel" id="tool-budget-planner" data-tool-tab="budget">
+ <article class="card tool-card tool-panel is-active" id="tool-budget-planner" data-tool-tab="budget">
  <h3>Food Budget Recovery Planner</h3>
  <p class="small-text">Create a realistic low-cost nutrition plan when money, storage, and cooking tools are limited.</p>
  <div class="form-grid">

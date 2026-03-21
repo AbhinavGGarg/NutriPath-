@@ -459,109 +459,6 @@
     };
   }
 
-  function initRiskChecker(engine, voice) {
-    const ageNode = document.getElementById('risk-age-group');
-    const contextNode = document.getElementById('risk-food-context');
-    const grid = document.getElementById('risk-factor-grid');
-    const button = document.getElementById('risk-check-btn');
-    const resultNode = document.getElementById('risk-check-result');
-    if (!ageNode || !contextNode || !grid || !button || !resultNode) return;
-
-    const weights = {
-      low_appetite: 4,
-      weight_loss: 5,
-      fatigue: 4,
-      pale_skin: 4,
-      swelling: 8,
-      diarrhea: 4,
-      low_activity: 3,
-      dizziness: 3,
-      confusion: 7,
-      trouble_chewing: 3,
-      missed_meals: 4,
-      afford_protein: 4,
-    };
-
-    const contextWeights = {
-      mixed: 0,
-      limited: 3,
-      processed: 3,
-      low_access: 4,
-    };
-
-    function getSelected() {
-      return [...grid.querySelectorAll('input[type="checkbox"]:checked')].map((box) => box.value);
-    }
-
-    button.addEventListener('click', () => {
-      const ageGroup = ageNode.value;
-      const context = contextNode.value;
-      const selected = getSelected();
-
-      const base = ageGroup === 'older' ? 4 : ageGroup === 'child' ? 3 : 2;
-      const score =
-        base +
-        (contextWeights[context] || 0) +
-        selected.reduce((sum, key) => sum + (weights[key] || 0), 0);
-
-      const has = (key) => selected.includes(key);
-      const urgentPattern =
-        (has('swelling') && has('fatigue')) ||
-        (ageGroup === 'older' && has('weight_loss') && has('confusion')) ||
-        (ageGroup === 'child' && has('low_appetite') && has('fatigue') && has('pale_skin'));
-
-      let level = 'Low risk';
-      let reason = 'Current pattern suggests lower immediate concern, but continue preventive nutrition support.';
-
-      if (urgentPattern || score >= 25) {
-        level = 'High risk';
-        reason = 'Multiple warning signs and household constraints suggest elevated nutrition risk that may worsen without fast action.';
-      } else if (score >= 14) {
-        level = 'Moderate risk';
-        reason = 'There are meaningful warning signals. Household meal quality and follow-up should be strengthened now.';
-      }
-
-      const actionSet = [];
-      if (level === 'High risk') {
-        actionSet.push({ title: 'Find verified support now', desc: 'Open Resource Map and route to available support points.', cta: 'Open Resource Map', href: './map.html' });
-        actionSet.push({ title: 'Run urgency escalation', desc: 'Confirm if this pattern should be treated as urgent.', cta: 'Open Urgency Tool', href: './learn.html?tool=escalation#tool-escalation' });
-        actionSet.push({ title: 'Improve meals immediately', desc: 'Use Pantry Rescue to close protein and iron gaps quickly.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' });
-      } else if (level === 'Moderate risk') {
-        actionSet.push({ title: 'Use Pantry Rescue', desc: 'Build a practical meal from available foods today.', cta: 'Run Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' });
-        actionSet.push({ title: 'Use Budget Planner', desc: 'Prioritize low-cost foods before the next grocery trip.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' });
-        actionSet.push({ title: 'Re-check in 7 days', desc: 'Track whether warning signs are improving.', cta: 'Take Assessment', href: './assessment.html' });
-      } else {
-        actionSet.push({ title: 'Keep meals stable', desc: 'Continue balanced meals and monitor for appetite or weight changes.', cta: 'Open Meal Builder', href: './meal-builder.html' });
-        actionSet.push({ title: 'Plan low-cost upgrades', desc: 'Use Budget Planner to prevent future nutrition decline.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' });
-      }
-
-      resultNode.classList.remove('hide');
-      resultNode.innerHTML = `
-        <div class="result-head">
-          <span class="${badgeClass(level)}">${escapeHtml(level)}</span>
-          <span class="small-text">Risk score: ${score}</span>
-        </div>
-        <p class="small-text"><strong>Why this result:</strong> ${escapeHtml(reason)}</p>
-        <p class="small-text"><strong>Selected signals:</strong> ${escapeHtml(selected.length ? selected.join(', ').replace(/_/g, ' ') : 'None selected')}</p>
-        <div class="tool-action-row">
-          ${actionSet
-            .map(
-              (item) => `<a class="btn btn-secondary btn-small" href="${escapeHtml(item.href)}">${escapeHtml(item.cta)}</a>`,
-            )
-            .join('')}
-        </div>
-      `;
-
-      const voiceSummary = `${level}. ${reason} Next actions: ${actionSet.map((item) => item.title).join('. ')}.`;
-      voice.setLatest(voiceSummary);
-      engine.update({
-        title: `Risk Checker Result: ${level}`,
-        summary: reason,
-        steps: actionSet,
-      });
-    });
-  }
-
   function initBudgetPlanner(engine, voice) {
     const budgetNode = document.getElementById('budget-weekly');
     const sizeNode = document.getElementById('budget-household');
@@ -682,8 +579,8 @@
         verdict: 'Likely myth',
         explanation: 'A person can have enough calories but still lack protein, iron, or vitamins.',
         corrected: 'Weight alone does not rule out malnutrition risk.',
-        action: 'Run Risk Checker and Pantry Rescue to assess diet quality and warning signals.',
-        href: './learn.html?tool=risk#tool-risk-checker',
+        action: 'Run Assessment and Pantry Rescue to assess diet quality and warning signals.',
+        href: './assessment.html',
       },
       {
         keys: ['older', 'losing weight is normal', 'seniors naturally eat less'],
@@ -729,8 +626,8 @@
         verdict: 'Partly true / depends',
         explanation: 'We cannot fully verify that exact claim yet with this quick checker.',
         corrected: 'Use a safer rule: prioritize protein, iron support, and warning-sign tracking.',
-        action: 'Use Risk Checker or Budget Planner for a decision-ready next step.',
-        href: './learn.html?tool=risk#tool-risk-checker',
+        action: 'Use Assessment or Budget Planner for a decision-ready next step.',
+        href: './assessment.html',
       };
 
       const output = match || fallback;
@@ -1147,7 +1044,7 @@
       nextStepsNode.innerHTML = `
         <p><strong>Next step 1:</strong> Make the rescue meal today.</p>
         <p><strong>Next step 2:</strong> Add one cheap protein this week.</p>
-        <p><strong>Next step 3:</strong> <a href="./learn.html?tool=risk#tool-risk-checker">Run Risk Checker</a> if warning signs are present.</p>
+        <p><strong>Next step 3:</strong> <a href="./assessment.html">Run Assessment</a> if warning signs are present.</p>
         <p><strong>Next step 4:</strong> <a href="./map.html">Open Resource Map</a> if access is unstable.</p>
       `;
 
@@ -1155,7 +1052,7 @@
       setStatus(`Rescue plan ready for ${selected.length} food item(s).`);
 
       const nextSteps = [
-        { title: 'Check household risk', desc: 'Use Risk Checker if symptoms or low appetite are present.', cta: 'Open Risk Checker', href: './learn.html?tool=risk#tool-risk-checker' },
+        { title: 'Check household risk', desc: 'Use Assessment if symptoms or low appetite are present.', cta: 'Open Assessment', href: './assessment.html' },
         { title: 'Plan low-cost groceries', desc: 'Use Budget Planner to stabilize nutrition this week.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
         { title: 'Find support if access is unstable', desc: 'Locate verified clinics and food support.', cta: 'Open Resource Map', href: './map.html' },
       ];
@@ -1220,11 +1117,9 @@
   }
 
   function initRecipeWidget(engine, voice) {
-    const ingredientsInput = document.getElementById('recipe-ingredients-input');
-    if (!ingredientsInput) return;
+    const recipeShell = document.getElementById('recipe-tools-shell');
+    if (!recipeShell) return;
 
-    const ingredientsBtn = document.getElementById('recipe-ingredients-btn');
-    const ingredientsResult = document.getElementById('recipe-ingredients-result');
     const nutritionQuery = document.getElementById('recipe-nutrition-query');
     const minProteinNode = document.getElementById('recipe-min-protein');
     const maxCaloriesNode = document.getElementById('recipe-max-calories');
@@ -1240,23 +1135,16 @@
     const mealCaloriesNode = document.getElementById('recipe-meal-calories');
     const mealBtn = document.getElementById('recipe-meal-btn');
     const mealResult = document.getElementById('recipe-meal-result');
-    const upcInput = document.getElementById('recipe-upc-input');
-    const upcBtn = document.getElementById('recipe-upc-btn');
-    const upcResult = document.getElementById('recipe-upc-result');
-    const nerInput = document.getElementById('recipe-ner-input');
-    const nerBtn = document.getElementById('recipe-ner-btn');
-    const nerResult = document.getElementById('recipe-ner-result');
-    const triviaBtn = document.getElementById('recipe-trivia-btn');
-    const jokeBtn = document.getElementById('recipe-joke-btn');
-    const funResult = document.getElementById('recipe-fun-result');
     const chatInput = document.getElementById('recipe-chat-input');
     const chatBtn = document.getElementById('recipe-chat-btn');
     const chatResult = document.getElementById('recipe-chat-result');
-    const remixChatLog = document.getElementById('recipe-remix-chat-log');
-    const remixInput = document.getElementById('recipe-remix-input');
-    const remixSendBtn = document.getElementById('recipe-remix-send');
+    const remixRestaurant = document.getElementById('recipe-remix-restaurant');
+    const remixItem = document.getElementById('recipe-remix-item');
+    const remixDiet = document.getElementById('recipe-remix-diet');
+    const remixPriority = document.getElementById('recipe-remix-priority');
+    const remixGoals = document.getElementById('recipe-remix-goals');
+    const remixGenerateBtn = document.getElementById('recipe-remix-generate');
     const remixResetBtn = document.getElementById('recipe-remix-reset');
-    const remixRegenerateBtn = document.getElementById('recipe-remix-regenerate');
     const remixResult = document.getElementById('recipe-remix-result');
 
     function setLoading(node, isLoading, text = 'Loading...') {
@@ -1284,7 +1172,6 @@
     async function spoonFetch(path, { method = 'GET', params = {}, form = null } = {}) {
       const normalizedMethod = String(method || 'GET').toUpperCase();
 
-      // Primary path: secure server-side proxy so end users never need API keys.
       try {
         const proxyResponse = await fetch(SPOONACULAR_PROXY_PATH, {
           method: 'POST',
@@ -1306,7 +1193,6 @@
         }
         return proxyPayload;
       } catch (proxyError) {
-        // Optional local fallback for development only.
         if (!INTEGRATION_KEYS.recipeApiKey) {
           const message = proxyError?.message || 'Recipe service is temporarily unavailable. Please try again.';
           throw new Error(message);
@@ -1360,353 +1246,144 @@
       voice.setLatest(voiceSummary || summary);
     }
 
-    function initSmartRemixAssistant() {
-      if (!remixChatLog || !remixInput || !remixSendBtn || !remixResetBtn || !remixRegenerateBtn || !remixResult) return;
-
-      const remixState = {
-        food: '',
-        itemDetails: '',
-        preference: '',
-        goals: '',
-      };
-      let remixStep = 'food';
-      let remixVariant = 0;
-      let latestRemixOutput = null;
-
-      function containsAny(text, list) {
-        return list.some((item) => text.includes(item));
-      }
-
-      function chooseByVariant(list, variantIndex) {
-        if (!Array.isArray(list) || !list.length) return '';
-        return list[Math.abs(variantIndex) % list.length];
-      }
-
-      function clamp(value, min, max) {
-        return Math.min(max, Math.max(min, value));
-      }
-
-      function nextPrompt() {
-        if (remixStep === 'food') return 'Tell me a food or restaurant you want to remix.';
-        if (remixStep === 'itemDetails') return 'What exactly are you craving from there? Include item, spice level, and sides.';
-        if (remixStep === 'preference') return 'What matters more for this remix: taste or health balance?';
-        if (remixStep === 'goals') return 'Any goals for this version? Example: high protein, lower calories, lower fat.';
-        return 'Use Regenerate version or Start over.';
-      }
-
-      function updatePlaceholder() {
-        remixInput.placeholder = nextPrompt();
-      }
-
-      function addMessage(role, text) {
-        const node = document.createElement('div');
-        node.className = `remix-msg ${role === 'user' ? 'user' : 'assistant'}`;
-        node.textContent = text;
-        remixChatLog.appendChild(node);
-        remixChatLog.scrollTop = remixChatLog.scrollHeight;
-      }
-
-      function inferDishProfile(payload) {
-        const combined = normalizeText(`${payload.food} ${payload.itemDetails}`);
-        const goalsText = normalizeText(payload.goals);
-        const preferenceText = normalizeText(payload.preference);
-
-        let dishType = 'plate';
-        if (containsAny(combined, ['slider', 'sandwich', 'burger'])) dishType = 'sandwich';
-        else if (containsAny(combined, ['taco'])) dishType = 'taco';
-        else if (containsAny(combined, ['burrito', 'wrap'])) dishType = 'wrap';
-        else if (containsAny(combined, ['pizza'])) dishType = 'pizza';
-        else if (containsAny(combined, ['noodle', 'ramen', 'pasta'])) dishType = 'noodle';
-        else if (containsAny(combined, ['bowl', 'rice bowl'])) dishType = 'bowl';
-
-        const vegetarian = containsAny(combined, ['vegetarian', 'vegan', 'plant based', 'plant-based', 'meatless']);
-        let proteinChoices = ['chicken breast'];
-        if (vegetarian) proteinChoices = ['extra-firm tofu', 'black beans'];
-        else if (containsAny(combined, ['beef', 'burger', 'steak'])) proteinChoices = ['93% lean ground turkey', '93% lean ground beef'];
-        else if (containsAny(combined, ['salmon', 'fish', 'tuna', 'shrimp'])) proteinChoices = ['salmon fillet', 'canned tuna'];
-        else if (containsAny(combined, ['chicken', 'tender', 'wing'])) proteinChoices = ['chicken breast', 'chicken thigh (trimmed)'];
-
-        const spicy = containsAny(combined, ['spicy', 'hot', 'nashville', 'cayenne', 'buffalo', 'jalapeno', 'chili']);
-        const crispy = containsAny(combined, ['fried', 'crispy', 'crunchy', 'tender', 'breaded', 'fries']);
-        const hasFries = containsAny(combined, ['fries', 'fry', 'wedges', 'chips']);
-
-        const highProtein = containsAny(goalsText, ['high protein', 'more protein', 'protein']);
-        const lowerCalories = containsAny(goalsText, ['lower calories', 'low calorie', 'calorie']);
-        const lowerFat = containsAny(goalsText, ['lower fat', 'low fat', 'less fat']);
-
-        const flavorWeight = containsAny(preferenceText, ['taste', 'flavor', 'taste first']) ? 'taste' : containsAny(preferenceText, ['health', 'balance']) ? 'balance' : 'balance';
-
-        return {
-          combined,
-          dishType,
-          protein: proteinChoices,
-          spicy,
-          crispy,
-          hasFries,
-          highProtein,
-          lowerCalories,
-          lowerFat,
-          flavorWeight,
-        };
-      }
-
-      function buildRemixOutput(payload, variantIndex) {
-        const profile = inferDishProfile(payload);
-        const protein = chooseByVariant(profile.protein, variantIndex);
-        const method = profile.crispy ? chooseByVariant(['air-fried', 'oven-crisped'], variantIndex) : chooseByVariant(['grilled', 'oven-roasted'], variantIndex);
-        const spiceBlend = profile.spicy ? 'smoked paprika, cayenne, garlic powder, black pepper' : 'paprika, garlic powder, black pepper, lemon zest';
-
-        const baseByDish = {
-          sandwich: chooseByVariant(['whole wheat slider buns', 'whole grain sandwich buns'], variantIndex),
-          taco: chooseByVariant(['corn tortillas', 'high-fiber tortillas'], variantIndex),
-          wrap: chooseByVariant(['whole wheat wraps', 'high-fiber tortillas'], variantIndex),
-          pizza: chooseByVariant(['whole wheat pita', 'high-protein flatbread'], variantIndex),
-          noodle: chooseByVariant(['chickpea pasta', 'whole wheat noodles'], variantIndex),
-          bowl: chooseByVariant(['brown rice', 'quinoa'], variantIndex),
-          plate: chooseByVariant(['brown rice', 'roasted potatoes'], variantIndex),
-        };
-
-        const base = baseByDish[profile.dishType] || 'whole grains';
-        const side = profile.hasFries ? chooseByVariant(['baked potato wedges', 'air-roasted sweet potato fries'], variantIndex) : chooseByVariant(['quick cabbage slaw', 'roasted frozen vegetables'], variantIndex);
-        const sauce = profile.spicy ? chooseByVariant(['Greek yogurt hot sauce', 'Greek yogurt chili-lime sauce'], variantIndex) : chooseByVariant(['Greek yogurt herb sauce', 'yogurt lemon-garlic sauce'], variantIndex);
-
-        const styleWordByDish = {
-          sandwich: 'sliders',
-          taco: 'tacos',
-          wrap: 'wraps',
-          pizza: 'flatbread pizza',
-          noodle: 'noodle bowl',
-          bowl: 'grain bowl',
-          plate: 'protein plate',
-        };
-        const styleWord = styleWordByDish[profile.dishType] || 'meal';
-
-        const ingredientPool = [protein, base, 'Greek yogurt', spiceBlend, side.includes('potato') ? 'potatoes' : 'shredded cabbage', 'olive oil spray', profile.spicy ? 'hot sauce' : 'lemon juice', profile.spicy ? 'pickle slices' : 'fresh herbs'];
-        const ingredients = ingredientPool.slice(0, 8);
-
-        const steps = [
-          `Season ${protein} with ${spiceBlend} and a spoon of Greek yogurt.`,
-          `${method[0].toUpperCase()}${method.slice(1)} the protein until cooked and browned.`,
-          `Cook the base (${base}) and prep ${side}.`,
-          `Mix a quick ${sauce}, then warm the bread/tortillas if using.`,
-          `Assemble the ${styleWord} and finish with sauce for heat and texture.`,
-        ].slice(0, 5);
-
-        let calorieRange = [470, 620];
-        if (profile.dishType === 'taco' || profile.dishType === 'wrap') calorieRange = [430, 580];
-        if (profile.dishType === 'bowl') calorieRange = [500, 680];
-        if (profile.dishType === 'noodle') calorieRange = [520, 700];
-        if (profile.lowerCalories) calorieRange = [calorieRange[0] - 70, calorieRange[1] - 90];
-        calorieRange = [clamp(calorieRange[0], 320, 900), clamp(calorieRange[1], 380, 980)];
-
-        let proteinRange = profile.protein[0].includes('tofu') || profile.protein[0].includes('bean') ? [22, 32] : [30, 42];
-        if (profile.highProtein) proteinRange = [proteinRange[0] + 5, proteinRange[1] + 8];
-        proteinRange = [clamp(proteinRange[0], 18, 60), clamp(proteinRange[1], 24, 72)];
-
-        const fatLabel = profile.lowerFat ? 'lower to moderate' : profile.crispy ? 'moderate' : 'moderate to low';
-
-        const smartSwap = `${method} ${profile.spicy ? 'spicy ' : ''}${protein} ${styleWord} with ${sauce} and ${side}`;
-        const whyBetterParts = ['Uses less deep-frying and a lighter sauce to reduce excess oil'];
-        if (profile.highProtein) whyBetterParts.push('keeps protein higher for better fullness');
-        if (profile.lowerCalories) whyBetterParts.push('trims calories without removing the main craving format');
-        if (profile.lowerFat) whyBetterParts.push('keeps fat more controlled');
-
-        const keepTheVibeParts = [];
-        if (profile.spicy) keepTheVibeParts.push('the heat stays strong');
-        if (profile.crispy) keepTheVibeParts.push('you still get a crispy bite');
-        keepTheVibeParts.push(`it keeps the same ${styleWord} feel`);
-        if (profile.flavorWeight === 'taste') keepTheVibeParts.push('flavor is prioritized first, with balanced upgrades');
-
-        return {
-          smartSwap,
-          homemadeRemix: {
-            ingredients,
-            steps,
-          },
-          whyBetter: `${whyBetterParts.join(', ')}.`,
-          keepTheVibe: `${keepTheVibeParts.join(', ')}.`,
-          nutritionEstimate: {
-            calories: `${calorieRange[0]}-${calorieRange[1]}`,
-            protein: `${proteinRange[0]}-${proteinRange[1]}g`,
-            fat: fatLabel,
-          },
-        };
-      }
-
-      function renderRemixOutput(output) {
-        const summary = `
-          <div class="recipe-mini-card">
-            <strong>Smart swap:</strong> ${escapeHtml(output.smartSwap)}
-          </div>
-          <div class="recipe-mini-card">
-            <strong>Why better:</strong> ${escapeHtml(output.whyBetter)}<br />
-            <strong>Keep the vibe:</strong> ${escapeHtml(output.keepTheVibe)}<br />
-            <strong>Estimated nutrition:</strong> ${escapeHtml(output.nutritionEstimate.calories)} calories · ${escapeHtml(output.nutritionEstimate.protein)} protein · ${escapeHtml(output.nutritionEstimate.fat)} fat
-          </div>
-          <pre class="recipe-remix-json">${escapeHtml(JSON.stringify(output, null, 2))}</pre>
-        `;
-        remixResult.innerHTML = summary;
-      }
-
-      function publishRemixOutput(output) {
-        latestRemixOutput = output;
-        remixRegenerateBtn.disabled = false;
-        renderRemixOutput(output);
-
-        updateEngine(
-          'Smart Food Remix Assistant',
-          `Generated a practical remix for ${remixState.itemDetails || remixState.food}.`,
-          [
-            { title: 'Try this smart swap tonight', desc: 'Start with the quick version before making bigger changes.', cta: 'Use this remix', href: './meal-builder.html?recipeTool=remix#recipe-widget' },
-            { title: 'Find matching recipes', desc: 'Run ingredient search using remix ingredients.', cta: 'Ingredients search', href: './meal-builder.html?recipeTool=ingredients#recipe-widget' },
-            { title: 'Tune for budget', desc: 'Use Budget Planner if price is still too high.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
-          ],
-          `Smart remix ready. ${output.keepTheVibe}`,
-        );
-      }
-
-      function resetConversation() {
-        remixState.food = '';
-        remixState.itemDetails = '';
-        remixState.preference = '';
-        remixState.goals = '';
-        remixStep = 'food';
-        remixVariant = 0;
-        latestRemixOutput = null;
-        remixResult.innerHTML = '';
-        remixChatLog.innerHTML = '';
-        remixRegenerateBtn.disabled = true;
-        updatePlaceholder();
-        addMessage('assistant', 'Tell me a food or restaurant you want to remix.');
-      }
-
-      function handleUserMessage(rawText) {
-        const text = String(rawText || '').trim();
-        if (!text) return;
-        addMessage('user', text);
-
-        if (remixStep === 'food') {
-          remixState.food = text;
-          remixStep = 'itemDetails';
-          updatePlaceholder();
-          addMessage('assistant', 'What exactly are you craving from there? Include item, spice level, and sides.');
-          return;
-        }
-
-        if (remixStep === 'itemDetails') {
-          remixState.itemDetails = text;
-          remixStep = 'preference';
-          updatePlaceholder();
-          addMessage('assistant', 'What matters more for this remix: taste or health balance?');
-          return;
-        }
-
-        if (remixStep === 'preference') {
-          remixState.preference = text;
-          remixStep = 'goals';
-          updatePlaceholder();
-          addMessage('assistant', 'Any goals for this version? Example: high protein, lower calories, lower fat.');
-          return;
-        }
-
-        if (remixStep === 'goals') {
-          remixState.goals = text;
-          remixStep = 'done';
-          updatePlaceholder();
-          const output = buildRemixOutput(remixState, remixVariant);
-          publishRemixOutput(output);
-          addMessage('assistant', 'Done. I built a healthier remix that keeps the same craving vibe.');
-          return;
-        }
-
-        addMessage('assistant', 'Use Regenerate version for another option, or Start over for a new craving.');
-      }
-
-      remixSendBtn.addEventListener('click', () => {
-        const value = remixInput.value;
-        remixInput.value = '';
-        handleUserMessage(value);
-      });
-
-      remixInput.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter') return;
-        event.preventDefault();
-        remixSendBtn.click();
-      });
-
-      remixResetBtn.addEventListener('click', () => {
-        resetConversation();
-      });
-
-      remixRegenerateBtn.addEventListener('click', () => {
-        if (!latestRemixOutput || remixStep !== 'done') {
-          addMessage('assistant', 'Finish one remix first, then regenerate another version.');
-          return;
-        }
-        remixVariant += 1;
-        const output = buildRemixOutput(remixState, remixVariant);
-        publishRemixOutput(output);
-        addMessage('assistant', 'Here is another version using the same craving and goals.');
-      });
-
-      resetConversation();
+    function containsAny(text, words) {
+      return words.some((word) => text.includes(word));
     }
 
-    initSmartRemixAssistant();
+    function choose(list, index = 0) {
+      if (!Array.isArray(list) || !list.length) return '';
+      return list[Math.abs(index) % list.length];
+    }
 
-    ingredientsBtn?.addEventListener('click', async () => {
-      const ingredients = String(ingredientsInput.value || '').trim();
-      if (!ingredients) {
-        ingredientsResult.innerHTML = '<p>Add ingredients first.</p>';
-        return;
+    function buildFastFoodRemix(payload, variant = 0) {
+      const restaurant = String(payload.restaurant || '').trim();
+      const item = String(payload.item || '').trim();
+      const diet = String(payload.diet || 'none');
+      const priority = String(payload.priority || 'balanced');
+      const goals = String(payload.goals || '').trim();
+      const text = normalizeText(`${restaurant} ${item} ${goals}`);
+
+      const isVegetarianRequest =
+        diet === 'vegetarian' ||
+        diet === 'vegan' ||
+        containsAny(text, ['vegetarian', 'veggie', 'vegan', 'cauliflower', 'black bean', 'mushroom', 'falafel', 'plant']);
+
+      const isVegan = diet === 'vegan' || containsAny(text, ['vegan', 'dairy free', 'dairy-free']);
+      const isSpicy = containsAny(text, ['spicy', 'hot', 'nashville', 'buffalo', 'chili', 'jalapeno']);
+      const wantsCrispy = containsAny(text, ['crispy', 'fried', 'crunchy', 'tender', 'nugget']);
+      const isBurger = containsAny(text, ['burger', 'slider', 'sandwich']);
+      const isWrap = containsAny(text, ['wrap', 'burrito']);
+      const isTaco = containsAny(text, ['taco']);
+      const hasFries = containsAny(text, ['fries', 'wedges', 'chips']);
+
+      let protein = 'chicken breast';
+      if (isVegetarianRequest) {
+        protein = containsAny(text, ['cauliflower']) ? 'cauliflower steak patty' : choose(['black bean patty', 'chickpea patty'], variant);
+      } else if (containsAny(text, ['beef', 'burger', 'double'])) {
+        protein = '93% lean ground turkey patty';
+      } else if (containsAny(text, ['fish', 'salmon', 'shrimp'])) {
+        protein = 'fish fillet (baked or air-fried)';
       }
 
-      setLoading(ingredientsResult, true, 'Finding recipes...');
-      try {
-        const data = await spoonFetch('/recipes/findByIngredients', {
-          params: {
-            ingredients,
-            number: 6,
-            ranking: 2,
-            ignorePantry: true,
-          },
-        });
+      const base = isBurger
+        ? choose(['whole wheat burger bun', 'whole grain brioche-style bun'], variant)
+        : isWrap
+          ? 'high-fiber tortilla'
+          : isTaco
+            ? 'corn tortillas'
+            : 'brown rice base';
 
-        const recipes = Array.isArray(data) ? data : [];
-        if (!recipes.length) {
-          ingredientsResult.innerHTML = '<p>No recipe matches found for those ingredients.</p>';
-          return;
-        }
+      const sauce = isVegan
+        ? (isSpicy ? 'chili-lime tahini sauce' : 'lemon-herb tahini sauce')
+        : (isSpicy ? 'Greek yogurt hot sauce' : 'Greek yogurt herb sauce');
 
-        ingredientsResult.innerHTML = recipes
-          .map((recipe) => {
-            const missed = (recipe.missedIngredients || []).slice(0, 3).map((item) => item.name).join(', ');
-            return `
-              <div class="recipe-mini-card">
-                <strong>${escapeHtml(recipe.title)}</strong>
-                <div class="small-text">Used: ${recipe.usedIngredientCount || 0} · Missing: ${recipe.missedIngredientCount || 0}</div>
-                <div class="small-text">${missed ? `Missing examples: ${escapeHtml(missed)}` : 'No major missing items.'}</div>
-                <a class="btn btn-secondary btn-small" href="${escapeHtml(recipeLink(recipe.id, recipe.title))}" target="_blank" rel="noreferrer">Open recipe</a>
-              </div>
-            `;
-          })
-          .join('');
+      const side = hasFries ? choose(['baked potato wedges', 'air-roasted sweet potato fries'], variant) : 'quick cabbage slaw';
 
-        updateEngine(
-          'Recipe Search by Ingredients',
-          'Found recipes based on foods already available at home.',
-          [
-            { title: 'Run Pantry Rescue', desc: 'Compare recipe ideas with NutriPath nutrient gap guidance.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
-            { title: 'Generate budget priorities', desc: 'Plan what to buy first to complete better meals.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
-          ],
-          'Ingredient recipe search complete. Review top options and missing foods.',
-        );
-      } catch (error) {
-        ingredientsResult.innerHTML = `<p>Could not fetch recipes right now. ${escapeHtml(error.message)}</p>`;
-      } finally {
-        ingredientsResult.classList.remove('is-loading');
-      }
-    });
+      const smartSwap = `${wantsCrispy ? 'Air-crisped' : 'Grilled'} ${isSpicy ? 'spicy ' : ''}${protein} with ${base}, ${sauce}, and ${side}`;
+
+      const groceries = [
+        protein,
+        base,
+        isVegan ? 'tahini' : 'plain Greek yogurt',
+        isSpicy ? 'hot sauce or chili paste' : 'lemon + garlic',
+        hasFries ? 'potatoes or sweet potatoes' : 'shredded cabbage',
+        'paprika + garlic powder + black pepper',
+        'lettuce, tomato, onion',
+      ];
+
+      const detailedSteps = [
+        `Step 1: Prep your main item. Season ${protein} with paprika, garlic powder, black pepper, and a small amount of oil spray.`,
+        `Step 2: Cook for texture. ${wantsCrispy ? 'Air-fry or oven-bake at high heat until crisp.' : 'Pan-sear or bake until fully cooked and lightly browned.'}`,
+        `Step 3: Build the sauce. Mix ${sauce} and keep it thick so the sandwich/wrap still feels like fast food.`,
+        `Step 4: Prep the base and toppings. Warm ${base}, then add lettuce, onion, and tomato for crunch.`,
+        `Step 5: Make the side. Cook ${side} with minimal oil and keep seasoning bold (salt, pepper, paprika).`,
+        'Step 6: Assemble and taste-adjust. Add sauce last, then increase spice or acidity until it matches your original craving.',
+      ];
+
+      const groceryOnly = [
+        `1) Buy a ready veggie/chicken patty that matches your preference (${isVegetarianRequest ? 'vegetarian' : 'lean-protein'}).`,
+        `2) Pair it with ${base} and pre-cut salad mix.`,
+        `3) Use ${sauce} style from the sauce aisle or make a quick 2-minute version at home.`,
+        `4) Add frozen potato wedges or bagged slaw so the full meal still feels complete.`,
+      ];
+
+      const whyBetter = [
+        'Less deep-frying and less heavy sauce lowers total calories and excess oil.',
+        isVegetarianRequest ? 'Keeps the meal vegetarian as requested.' : 'Keeps protein quality high with a leaner main item.',
+        priority === 'health' ? 'Leans harder toward health balance while keeping flavor.' : 'Keeps taste and texture close to the original fast-food experience.',
+      ];
+
+      const nutritionEstimate = {
+        calories: priority === 'health' ? '380-520' : '450-620',
+        protein: isVegetarianRequest ? '18-30g' : '28-42g',
+        fat: priority === 'health' ? 'low to moderate' : 'moderate',
+      };
+
+      return {
+        title: `${item || 'Fast food item'} remix from ${restaurant || 'your selected place'}`,
+        smartSwap,
+        groceries,
+        detailedSteps,
+        groceryOnly,
+        whyBetter,
+        keepVibe: `Still ${isSpicy ? 'spicy, ' : ''}${wantsCrispy ? 'crispy, ' : ''}and satisfying in the same format you asked for.`,
+        nutritionEstimate,
+      };
+    }
+
+    function renderFastFoodRemix(output) {
+      remixResult.innerHTML = `
+        <div class="recipe-mini-card">
+          <strong>Fast remix:</strong> ${escapeHtml(output.smartSwap)}
+        </div>
+        <div class="recipe-mini-card">
+          <strong>What to buy</strong>
+          <ul class="recipe-list">
+            ${output.groceries.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="recipe-mini-card">
+          <strong>Step-by-step (home)</strong>
+          <ol class="recipe-list">
+            ${output.detailedSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
+          </ol>
+        </div>
+        <div class="recipe-mini-card">
+          <strong>Grocery-only shortcut</strong>
+          <ol class="recipe-list">
+            ${output.groceryOnly.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
+          </ol>
+        </div>
+        <div class="recipe-mini-card">
+          <strong>Why better</strong>
+          <ul class="recipe-list">
+            ${output.whyBetter.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+          </ul>
+          <div class="small-text" style="margin-top: 0.4rem;"><strong>Keep the vibe:</strong> ${escapeHtml(output.keepVibe)}</div>
+          <div class="small-text" style="margin-top: 0.35rem;"><strong>Estimated nutrition:</strong> ${escapeHtml(output.nutritionEstimate.calories)} calories · ${escapeHtml(output.nutritionEstimate.protein)} protein · ${escapeHtml(output.nutritionEstimate.fat)} fat</div>
+        </div>
+      `;
+    }
 
     nutritionBtn?.addEventListener('click', async () => {
       setLoading(nutritionResult, true, 'Searching by nutrition...');
@@ -1749,7 +1426,7 @@
           'Generated recipe options filtered by nutrition targets.',
           [
             { title: 'Use Meal Builder', desc: 'Adapt top recipes to current pantry constraints.', cta: 'Open Meal Builder', href: './meal-builder.html' },
-            { title: 'Check household risk', desc: 'If intake remains low-quality, run quick risk triage.', cta: 'Open Risk Checker', href: './learn.html?tool=risk#tool-risk-checker' },
+            { title: 'Run assessment if risk patterns continue', desc: 'Use the full assessment flow for structured risk output.', cta: 'Open Assessment', href: './assessment.html' },
           ],
           'Nutrition-based recipe search complete. Review protein and calorie targets.',
         );
@@ -1825,7 +1502,7 @@
           'Cuisine Classification',
           'Classified recipe cuisine and confidence for culturally relevant meal planning.',
           [
-            { title: 'Search similar nutrition-friendly recipes', desc: 'Use nutrition filters to find related options.', cta: 'Nutrition Search', href: '#recipe-widget' },
+            { title: 'Run nutrition search next', desc: 'Filter recipes by your nutrient target.', cta: 'Nutrition Search', href: './meal-builder.html?recipeTool=nutrition#recipe-widget' },
             { title: 'Adapt to pantry reality', desc: 'Use Pantry Rescue for household constraints.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
           ],
           'Cuisine classification complete. Use this to adapt culturally relevant meal choices.',
@@ -1895,103 +1572,6 @@
       }
     });
 
-    upcBtn?.addEventListener('click', async () => {
-      const upc = String(upcInput?.value || '').trim();
-      if (!upc) {
-        upcResult.innerHTML = '<p>Add a UPC code first.</p>';
-        return;
-      }
-      setLoading(upcResult, true, 'Looking up product...');
-      try {
-        const data = await spoonFetch(`/food/products/upc/${encodeURIComponent(upc)}`);
-        upcResult.innerHTML = `
-          <div class="recipe-mini-card">
-            <strong>${escapeHtml(data?.title || 'Product found')}</strong>
-            <div class="small-text">Category: ${escapeHtml(data?.category || 'n/a')}</div>
-            <div class="small-text">Brand: ${escapeHtml(data?.brand || data?.brands || 'n/a')}</div>
-            <div class="small-text">Badges: ${escapeHtml((data?.badges || []).slice(0, 8).join(', ') || 'n/a')}</div>
-          </div>
-        `;
-
-        updateEngine(
-          'UPC Product Lookup',
-          'Looked up grocery product details for decision support.',
-          [
-            { title: 'Check nutrition quality', desc: 'If product is highly processed, run Pantry Rescue for balancing guidance.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
-          ],
-          'UPC lookup complete. Review product category and badges before purchase.',
-        );
-      } catch (error) {
-        upcResult.innerHTML = `<p>UPC lookup failed. ${escapeHtml(error.message)}</p>`;
-      } finally {
-        upcResult.classList.remove('is-loading');
-      }
-    });
-
-    nerBtn?.addEventListener('click', async () => {
-      const text = String(nerInput?.value || '').trim();
-      if (!text) {
-        nerResult.innerHTML = '<p>Enter food-related text first.</p>';
-        return;
-      }
-      setLoading(nerResult, true, 'Detecting food entities...');
-      try {
-        const data = await spoonFetch('/food/detect', {
-          method: 'POST',
-          form: { text },
-        });
-
-        const annotations = Array.isArray(data?.annotations) ? data.annotations : [];
-        nerResult.innerHTML = `
-          <div class="recipe-mini-card">
-            <strong>Detected items</strong>
-            <ul class="recipe-list">
-              ${annotations.length
-                ? annotations.map((item) => `<li>${escapeHtml(item.annotation)} (${escapeHtml(item.tag || 'item')})</li>`).join('')
-                : '<li>No food entities detected.</li>'}
-            </ul>
-          </div>
-        `;
-
-        updateEngine(
-          'Food Entity Detection',
-          'Detected food-related entities from free text for faster meal logging.',
-          [
-            { title: 'Send detected foods to ingredient search', desc: 'Run fridge search with detected items.', cta: 'Use ingredient search', href: '#recipe-widget' },
-          ],
-          'Food detection complete. Review detected ingredients and dishes.',
-        );
-      } catch (error) {
-        nerResult.innerHTML = `<p>Food detection failed. ${escapeHtml(error.message)}</p>`;
-      } finally {
-        nerResult.classList.remove('is-loading');
-      }
-    });
-
-    triviaBtn?.addEventListener('click', async () => {
-      setLoading(funResult, true, 'Fetching food trivia...');
-      try {
-        const data = await spoonFetch('/food/trivia/random');
-        funResult.innerHTML = `<p>${escapeHtml(data?.text || 'No trivia available right now.')}</p>`;
-      } catch (error) {
-        funResult.innerHTML = `<p>Could not load trivia. ${escapeHtml(error.message)}</p>`;
-      } finally {
-        funResult.classList.remove('is-loading');
-      }
-    });
-
-    jokeBtn?.addEventListener('click', async () => {
-      setLoading(funResult, true, 'Fetching food joke...');
-      try {
-        const data = await spoonFetch('/food/jokes/random');
-        funResult.innerHTML = `<p>${escapeHtml(data?.text || 'No joke available right now.')}</p>`;
-      } catch (error) {
-        funResult.innerHTML = `<p>Could not load joke. ${escapeHtml(error.message)}</p>`;
-      } finally {
-        funResult.classList.remove('is-loading');
-      }
-    });
-
     chatBtn?.addEventListener('click', async () => {
       const question = String(chatInput?.value || '').trim();
       if (!question) {
@@ -2002,13 +1582,10 @@
       setLoading(chatResult, true, 'Thinking...');
       const normalized = normalizeText(question);
       try {
-        if (normalized.includes('upc') || normalized.includes('barcode')) {
-          chatResult.innerHTML = '<p>Use the UPC tool above to check grocery products quickly.</p>';
-        } else if (normalized.includes('budget') || normalized.includes('cheap') || normalized.includes('afford')) {
-          chatResult.innerHTML = '<p>Use Budget Planner in Action Hub to rank low-cost nutrition foods first, then run ingredient search for recipes.</p>';
-        } else if (normalized.includes('fridge') || normalized.includes('have') || normalized.includes('ingredients')) {
-          ingredientsInput.value = question.replace(/.*with/i, '').trim() || ingredientsInput.value;
-          chatResult.innerHTML = '<p>I moved your request toward ingredient search. Click "Find recipes" in the first recipe tool.</p>';
+        if (normalized.includes('budget') || normalized.includes('cheap') || normalized.includes('afford')) {
+          chatResult.innerHTML = '<p>Use Budget Planner in Action Hub to rank low-cost nutrition foods first, then run nutrition search for recipes.</p>';
+        } else if (normalized.includes('fast food') || normalized.includes('burger') || normalized.includes('wrap')) {
+          chatResult.innerHTML = '<p>Use Fast Food Remix tab to get a healthier remake with step-by-step instructions.</p>';
         } else {
           const data = await spoonFetch('/recipes/complexSearch', {
             params: {
@@ -2033,8 +1610,8 @@
           'Recipe Chatbot Helper',
           'Provided recipe direction based on user question and available API tools.',
           [
-            { title: 'Run ingredient search', desc: 'Find practical recipes with currently available foods.', cta: 'Ingredient search', href: '#recipe-widget' },
-            { title: 'Run Pantry Rescue', desc: 'Check if recipes fit nutrition-risk constraints.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
+            { title: 'Run nutrition search', desc: 'Find recipe options that fit your nutrient target.', cta: 'Nutrition Search', href: './meal-builder.html?recipeTool=nutrition#recipe-widget' },
+            { title: 'Use Fast Food Remix', desc: 'Generate healthier versions of specific fast-food cravings.', cta: 'Open Fast Food Remix', href: './meal-builder.html?recipeTool=remix#recipe-widget' },
           ],
           'Recipe helper responded. Review suggested next actions and related tools.',
         );
@@ -2044,13 +1621,56 @@
         chatResult.classList.remove('is-loading');
       }
     });
+
+    let remixVariant = 0;
+
+    remixGenerateBtn?.addEventListener('click', () => {
+      const payload = {
+        restaurant: remixRestaurant?.value,
+        item: remixItem?.value,
+        diet: remixDiet?.value,
+        priority: remixPriority?.value,
+        goals: remixGoals?.value,
+      };
+
+      if (!String(payload.restaurant || '').trim() || !String(payload.item || '').trim()) {
+        remixResult.innerHTML = '<p>Please enter the fast food place and the exact item first.</p>';
+        return;
+      }
+
+      const output = buildFastFoodRemix(payload, remixVariant);
+      renderFastFoodRemix(output);
+
+      updateEngine(
+        'Fast Food Remix',
+        `Generated a healthier remake for ${payload.item} from ${payload.restaurant}.`,
+        [
+          { title: 'Try this remix tonight', desc: 'Follow the step-by-step plan and compare taste.', cta: 'Use this plan', href: './meal-builder.html?recipeTool=remix#recipe-widget' },
+          { title: 'Adjust calories and protein next', desc: 'Use nutrition search for additional options.', cta: 'Open Nutrition Search', href: './meal-builder.html?recipeTool=nutrition#recipe-widget' },
+          { title: 'Use budget planning if needed', desc: 'Lower cost while keeping nutrition quality.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
+        ],
+        `Fast Food Remix ready. ${output.keepVibe}`,
+      );
+
+      remixVariant += 1;
+    });
+
+    remixResetBtn?.addEventListener('click', () => {
+      if (remixRestaurant) remixRestaurant.value = '';
+      if (remixItem) remixItem.value = '';
+      if (remixDiet) remixDiet.value = 'none';
+      if (remixPriority) remixPriority.value = 'balanced';
+      if (remixGoals) remixGoals.value = '';
+      if (remixResult) remixResult.innerHTML = '';
+      remixVariant = 0;
+    });
   }
 
   const voice = buildVoiceSupport();
   const engine = buildNextStepEngine();
 
   initToolTabs('action-tools-shell', {
-    defaultTab: 'risk',
+    defaultTab: 'budget',
     useHash: true,
     queryParam: 'tool',
     allowOverview: false,
@@ -2058,7 +1678,7 @@
     focusHideSelectors: ['#tool-next-steps', '#voice-support'],
   });
   initToolTabs('recipe-tools-shell', {
-    defaultTab: 'ingredients',
+    defaultTab: 'nutrition',
     useHash: false,
     queryParam: 'recipeTool',
     allowOverview: false,
@@ -2066,7 +1686,6 @@
     focusHideSelectors: ['#meal-rescue-builder', '#meal-links'],
   });
 
-  initRiskChecker(engine, voice);
   initBudgetPlanner(engine, voice);
   initPantryRescue(engine, voice);
   initEscalationTool(engine, voice);
