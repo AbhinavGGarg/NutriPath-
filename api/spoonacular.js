@@ -27,9 +27,12 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const apiKey = process.env.SPOONACULAR_API_KEY;
+  const apiKey =
+    process.env.SPOONACULAR_API_KEY ||
+    process.env.RECIPE_API_KEY ||
+    process.env.SPOONACULAR_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: 'SPOONACULAR_API_KEY is not configured on the server.' });
+    res.status(500).json({ error: 'SPOONACULAR_API_KEY (or RECIPE_API_KEY) is not configured on the server.' });
     return;
   }
 

@@ -44,6 +44,7 @@ Recipe tools now call a Vercel serverless endpoint at `/api/spoonacular`, so end
 Set this environment variable in Vercel project settings:
 
 - `SPOONACULAR_API_KEY`
+- Optional alias also supported: `RECIPE_API_KEY`
 
 Local development fallback:
 
