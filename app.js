@@ -7522,7 +7522,246 @@
  nav.appendChild(controls);
  }
 
+ let ambientBackgroundInitialized = false;
+
+ function initInteractiveAmbientBackground() {
+ if (ambientBackgroundInitialized) return;
+ if (!document.body) return;
+ ambientBackgroundInitialized = true;
+
+ const existing = document.getElementById('nutri-ambient-bg');
+ if (existing) return;
+
+ const canvas = document.createElement('canvas');
+ canvas.id = 'nutri-ambient-bg';
+ canvas.setAttribute('aria-hidden', 'true');
+ document.body.prepend(canvas);
+
+ const ctx = canvas.getContext('2d', { alpha: true });
+ if (!ctx) return;
+
+ const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const DPR = Math.min(window.devicePixelRatio || 1, 2);
+ let width = 0;
+ let height = 0;
+ let rafId = 0;
+
+ const pointer = {
+ x: 0,
+ y: 0,
+ vx: 0,
+ vy: 0,
+ active: false,
+ radius: prefersReducedMotion ? 110 : 170,
+ };
+
+ const sparks = [];
+ const particles = [];
+
+ const baseCount = Math.min(140, Math.max(44, Math.floor((window.innerWidth * window.innerHeight) / 24000)));
+ const particleCount = prefersReducedMotion ? Math.floor(baseCount * 0.5) : baseCount;
+
+ function rand(min, max) {
+ return min + Math.random() * (max - min);
+ }
+
+ function colorByTone(tone, alpha) {
+ if (tone < 0.34) return `rgba(130, 220, 255, ${alpha})`;
+ if (tone < 0.68) return `rgba(124, 234, 211, ${alpha})`;
+ return `rgba(255, 196, 118, ${alpha})`;
+ }
+
+ function createParticle(enterFromEdge = false) {
+ const speed = rand(0.18, 0.62);
+ const angle = rand(-0.35, 0.65);
+ const fromLeft = Math.random() < 0.55;
+ const x = enterFromEdge ? (fromLeft ? rand(-50, -10) : rand(width + 10, width + 50)) : rand(0, Math.max(1, width));
+ const y = enterFromEdge ? rand(0, Math.max(1, height)) : rand(0, Math.max(1, height));
+
+ return {
+ x,
+ y,
+ vx: Math.cos(angle) * speed * (fromLeft ? 1 : -1),
+ vy: Math.sin(angle) * speed + rand(-0.06, 0.06),
+ drift: rand(0.004, 0.014),
+ phase: rand(0, Math.PI * 2),
+ length: rand(10, 24),
+ width: rand(1.2, 2.8),
+ alpha: rand(0.22, 0.65),
+ tone: Math.random(),
+ };
+ }
+
+ function addBurst(x, y) {
+ const burstCount = prefersReducedMotion ? 8 : 16;
+ for (let i = 0; i < burstCount; i += 1) {
+ const angle = (Math.PI * 2 * i) / burstCount + rand(-0.2, 0.2);
+ const speed = rand(0.9, 2.4);
+ sparks.push({
+ x,
+ y,
+ vx: Math.cos(angle) * speed,
+ vy: Math.sin(angle) * speed,
+ life: rand(20, 34),
+ maxLife: 34,
+ size: rand(1.4, 3.2),
+ tone: Math.random(),
+ });
+ }
+ }
+
+ function resize() {
+ width = Math.max(window.innerWidth, 1);
+ height = Math.max(window.innerHeight, 1);
+ canvas.width = Math.floor(width * DPR);
+ canvas.height = Math.floor(height * DPR);
+ canvas.style.width = `${width}px`;
+ canvas.style.height = `${height}px`;
+ ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+ if (!particles.length) {
+ for (let i = 0; i < particleCount; i += 1) {
+ particles.push(createParticle(false));
+ }
+ }
+ }
+
+ function onPointerMove(event) {
+ const nextX = event.clientX;
+ const nextY = event.clientY;
+ pointer.vx = (nextX - pointer.x) * 0.18;
+ pointer.vy = (nextY - pointer.y) * 0.18;
+ pointer.x = nextX;
+ pointer.y = nextY;
+ pointer.active = true;
+ }
+
+ function onPointerDown(event) {
+ pointer.x = event.clientX;
+ pointer.y = event.clientY;
+ pointer.active = true;
+ addBurst(pointer.x, pointer.y);
+ }
+
+ function drawParticle(item) {
+ const angle = Math.atan2(item.vy, item.vx || 0.0001);
+ ctx.save();
+ ctx.translate(item.x, item.y);
+ ctx.rotate(angle);
+ ctx.lineCap = 'round';
+ ctx.lineWidth = item.width;
+ ctx.shadowBlur = 8;
+ ctx.shadowColor = colorByTone(item.tone, 0.4);
+ ctx.strokeStyle = colorByTone(item.tone, item.alpha);
+ ctx.beginPath();
+ ctx.moveTo(-item.length * 0.52, 0);
+ ctx.lineTo(item.length * 0.62, 0);
+ ctx.stroke();
+ ctx.fillStyle = colorByTone(item.tone, Math.min(0.95, item.alpha + 0.22));
+ ctx.beginPath();
+ ctx.arc(item.length * 0.62, 0, Math.max(0.6, item.width * 0.45), 0, Math.PI * 2);
+ ctx.fill();
+ ctx.restore();
+ }
+
+ function stepParticles(time) {
+ for (let index = 0; index < particles.length; index += 1) {
+ const item = particles[index];
+ const wobble = Math.sin(time * item.drift + item.phase) * 0.04;
+ item.vy += wobble * 0.06;
+
+ if (pointer.active && !prefersReducedMotion) {
+ const dx = item.x - pointer.x;
+ const dy = item.y - pointer.y;
+ const dist = Math.hypot(dx, dy);
+ if (dist < pointer.radius) {
+ const push = (pointer.radius - dist) / pointer.radius;
+ item.vx += (dx / (dist || 1)) * push * 0.28 + pointer.vx * 0.004;
+ item.vy += (dy / (dist || 1)) * push * 0.28 + pointer.vy * 0.004;
+ item.alpha = Math.min(0.95, item.alpha + push * 0.1);
+ }
+ }
+
+ item.vx *= 0.992;
+ item.vy *= 0.992;
+ item.x += item.vx;
+ item.y += item.vy;
+ item.alpha *= 0.997;
+ if (item.alpha < 0.2) item.alpha = rand(0.2, 0.6);
+
+ if (item.x < -70 || item.x > width + 70 || item.y < -70 || item.y > height + 70) {
+ particles[index] = createParticle(true);
+ continue;
+ }
+
+ drawParticle(item);
+ }
+ }
+
+ function stepSparks() {
+ for (let index = sparks.length - 1; index >= 0; index -= 1) {
+ const spark = sparks[index];
+ spark.x += spark.vx;
+ spark.y += spark.vy;
+ spark.vx *= 0.96;
+ spark.vy *= 0.96;
+ spark.life -= 1;
+ if (spark.life <= 0) {
+ sparks.splice(index, 1);
+ continue;
+ }
+
+ const alpha = Math.max(0, spark.life / spark.maxLife);
+ ctx.fillStyle = colorByTone(spark.tone, alpha * 0.9);
+ ctx.shadowBlur = 10;
+ ctx.shadowColor = colorByTone(spark.tone, alpha * 0.75);
+ ctx.beginPath();
+ ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
+ ctx.fill();
+ }
+ }
+
+ function frame(now) {
+ const time = now || 0;
+ ctx.clearRect(0, 0, width, height);
+ stepParticles(time * 0.04);
+ stepSparks();
+ if (pointer.active) {
+ pointer.vx *= 0.88;
+ pointer.vy *= 0.88;
+ if (Math.abs(pointer.vx) + Math.abs(pointer.vy) < 0.02) pointer.active = false;
+ }
+ rafId = window.requestAnimationFrame(frame);
+ }
+
+ function startAnimation() {
+ if (rafId) return;
+ rafId = window.requestAnimationFrame(frame);
+ }
+
+ function stopAnimation() {
+ if (!rafId) return;
+ window.cancelAnimationFrame(rafId);
+ rafId = 0;
+ }
+
+ resize();
+ startAnimation();
+
+ window.addEventListener('resize', resize, { passive: true });
+ window.addEventListener('pointermove', onPointerMove, { passive: true });
+ window.addEventListener('pointerdown', onPointerDown, { passive: true });
+ window.addEventListener('blur', () => {
+ pointer.active = false;
+ });
+ document.addEventListener('visibilitychange', () => {
+ if (document.hidden) stopAnimation();
+ else startAnimation();
+ });
+ }
+
  function applyGlobalUi() {
+ initInteractiveAmbientBackground();
  decorateNavForTranslation();
  applyTranslations(document);
  createAuthButtons();
