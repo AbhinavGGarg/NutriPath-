@@ -1522,6 +1522,176 @@
       return `${hit.amount.toFixed(0)}${hit.unit || ''}`;
     }
 
+    function serviceUnavailable(error) {
+      const message = normalizeText(error?.message || error || '');
+      return (
+        message.includes('not configured') ||
+        message.includes('api key') ||
+        message.includes('invalid key') ||
+        message.includes('unauthorized') ||
+        message.includes('forbidden') ||
+        message.includes('quota') ||
+        message.includes('rate limit') ||
+        message.includes('too many request') ||
+        message.includes('timed out') ||
+        message.includes('timeout') ||
+        message.includes('network') ||
+        message.includes('failed to fetch') ||
+        message.includes('temporarily unavailable') ||
+        message.includes('request failed')
+      );
+    }
+
+    const fallbackRecipes = [
+      { id: 9001, title: 'Lentil Tomato Stew', cuisine: 'Mediterranean', protein: 18, calories: 420, iron: 5.8, readyInMinutes: 30, ingredients: ['lentils', 'tomato', 'onion', 'garlic', 'olive oil'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+      { id: 9002, title: 'Egg and Spinach Wrap', cuisine: 'American', protein: 23, calories: 460, iron: 3.4, readyInMinutes: 15, ingredients: ['eggs', 'spinach', 'whole wheat wrap', 'onion'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+      { id: 9003, title: 'Chickpea Rice Bowl', cuisine: 'Middle Eastern', protein: 16, calories: 510, iron: 4.7, readyInMinutes: 22, ingredients: ['chickpeas', 'rice', 'cabbage', 'lemon'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+      { id: 9004, title: 'Tofu Veggie Stir Fry', cuisine: 'Asian', protein: 24, calories: 430, iron: 4.1, readyInMinutes: 20, ingredients: ['tofu', 'broccoli', 'carrot', 'soy sauce'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+      { id: 9005, title: 'Sardine Potato Skillet', cuisine: 'Portuguese', protein: 28, calories: 490, iron: 3.1, readyInMinutes: 18, ingredients: ['sardines', 'potato', 'tomato', 'onion'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+      { id: 9006, title: 'Greek Yogurt Oat Bowl', cuisine: 'European', protein: 20, calories: 390, iron: 2.0, readyInMinutes: 8, ingredients: ['oats', 'yogurt', 'banana', 'seeds'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+      { id: 9007, title: 'Black Bean Corn Tacos', cuisine: 'Mexican', protein: 19, calories: 470, iron: 4.9, readyInMinutes: 17, ingredients: ['black beans', 'corn tortillas', 'tomato', 'onion'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+      { id: 9008, title: 'Chicken Cabbage Soup', cuisine: 'American', protein: 30, calories: 380, iron: 2.7, readyInMinutes: 35, ingredients: ['chicken', 'cabbage', 'carrot', 'garlic'], sourceUrl: './meal-builder.html#meal-rescue-builder' },
+    ];
+
+    const fallbackCuisineRules = [
+      { cuisine: 'Indian', keys: ['paneer', 'masala', 'dal', 'biryani', 'tikka', 'chai', 'naan'] },
+      { cuisine: 'Mexican', keys: ['taco', 'burrito', 'quesadilla', 'salsa', 'enchilada'] },
+      { cuisine: 'Italian', keys: ['pasta', 'risotto', 'lasagna', 'parmesan', 'pizza'] },
+      { cuisine: 'Middle Eastern', keys: ['hummus', 'falafel', 'shawarma', 'tahini', 'kebab'] },
+      { cuisine: 'Chinese', keys: ['stir fry', 'fried rice', 'noodle', 'dumpling'] },
+      { cuisine: 'Japanese', keys: ['sushi', 'ramen', 'miso', 'teriyaki'] },
+      { cuisine: 'American', keys: ['burger', 'bbq', 'sandwich', 'slaw', 'mac and cheese'] },
+      { cuisine: 'Mediterranean', keys: ['lentil', 'olive', 'feta', 'chickpea', 'tabbouleh'] },
+    ];
+
+    function numberOr(value, fallbackValue) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallbackValue;
+    }
+
+    function fallbackClassify(title) {
+      const normalized = normalizeText(title);
+      let primary = 'Global';
+      let confidence = 0.56;
+      const alternatives = [];
+
+      fallbackCuisineRules.forEach((rule) => {
+        const matches = rule.keys.filter((key) => normalized.includes(normalizeText(key))).length;
+        if (!matches) return;
+        alternatives.push({ cuisine: rule.cuisine, score: matches });
+      });
+
+      if (alternatives.length) {
+        alternatives.sort((a, b) => b.score - a.score);
+        primary = alternatives[0].cuisine;
+        confidence = Math.min(0.94, 0.6 + alternatives[0].score * 0.12);
+      }
+
+      return {
+        cuisine: primary,
+        cuisines: [...new Set([primary, ...alternatives.map((item) => item.cuisine)])].slice(0, 4),
+        confidence,
+      };
+    }
+
+    function fallbackSearchNutrition(query, minProtein, maxCalories) {
+      const normalized = normalizeText(query || '');
+      const proteinFloor = numberOr(minProtein, 0);
+      const caloriesCap = numberOr(maxCalories, Number.POSITIVE_INFINITY);
+
+      const filtered = fallbackRecipes.filter((recipe) => {
+        const queryMatch =
+          !normalized ||
+          normalizeText(recipe.title).includes(normalized) ||
+          recipe.ingredients.some((ingredient) => normalizeText(ingredient).includes(normalized));
+        return queryMatch && recipe.protein >= proteinFloor && recipe.calories <= caloriesCap;
+      });
+
+      return (filtered.length ? filtered : fallbackRecipes)
+        .slice(0, 6)
+        .map((recipe) => ({
+          id: recipe.id,
+          title: recipe.title,
+          readyInMinutes: recipe.readyInMinutes,
+          sourceUrl: recipe.sourceUrl,
+          nutrition: {
+            nutrients: [
+              { name: 'Protein', amount: recipe.protein, unit: 'g' },
+              { name: 'Calories', amount: recipe.calories, unit: 'kcal' },
+              { name: 'Iron', amount: recipe.iron, unit: 'mg' },
+            ],
+          },
+        }));
+    }
+
+    function fallbackExtractRecipe(urlString) {
+      let title = 'Extracted recipe (local fallback)';
+      try {
+        const parsedUrl = new URL(urlString);
+        const slug = parsedUrl.pathname
+          .split('/')
+          .filter(Boolean)
+          .pop();
+        if (slug) {
+          title = slug
+            .replace(/[-_]+/g, ' ')
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+        }
+      } catch {
+        // keep fallback title
+      }
+      const recipe = fallbackRecipes.find((item) => normalizeText(title).includes(normalizeText(item.title.split(' ')[0]))) || fallbackRecipes[0];
+      return {
+        title,
+        servings: 4,
+        readyInMinutes: recipe.readyInMinutes || 25,
+        sourceUrl: urlString,
+        extendedIngredients: recipe.ingredients.map((ingredient) => ({ original: ingredient })),
+      };
+    }
+
+    function fallbackMealPlan(timeFrame) {
+      if (timeFrame === 'day') {
+        return {
+          meals: fallbackRecipes.slice(0, 3).map((recipe) => ({
+            id: recipe.id,
+            title: recipe.title,
+            sourceUrl: recipe.sourceUrl,
+          })),
+        };
+      }
+
+      const week = {};
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      days.forEach((day, index) => {
+        const picks = [fallbackRecipes[index % fallbackRecipes.length], fallbackRecipes[(index + 2) % fallbackRecipes.length], fallbackRecipes[(index + 4) % fallbackRecipes.length]];
+        week[day] = {
+          meals: picks.map((recipe) => ({
+            id: recipe.id,
+            title: recipe.title,
+            sourceUrl: recipe.sourceUrl,
+          })),
+        };
+      });
+      return { week };
+    }
+
+    function fallbackShoppingListFromMeals(meals) {
+      const counter = new Map();
+      meals.forEach((meal) => {
+        const recipe = fallbackRecipes.find((item) => item.id === meal.id);
+        (recipe?.ingredients || []).forEach((ingredient) => {
+          const key = String(ingredient || '').trim();
+          if (!key) return;
+          counter.set(key, (counter.get(key) || 0) + 1);
+        });
+      });
+      return [...counter.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, 20)
+        .map(([name, score]) => `${name} (${score} recipe${score > 1 ? 's' : ''})`);
+    }
+
     async function spoonFetch(path, { method = 'GET', params = {}, form = null } = {}) {
       const normalizedMethod = String(method || 'GET').toUpperCase();
 
@@ -1766,18 +1936,26 @@
     nutritionBtn?.addEventListener('click', async () => {
       setLoading(nutritionResult, true, 'Searching by nutrition...');
       try {
-        const data = await spoonFetch('/recipes/complexSearch', {
-          params: {
-            query: nutritionQuery?.value || '',
-            number: 6,
-            minProtein: minProteinNode?.value || '',
-            maxCalories: maxCaloriesNode?.value || '',
-            addRecipeInformation: true,
-            addRecipeNutrition: true,
-          },
-        });
+        let usedFallback = false;
+        let recipes = [];
+        try {
+          const data = await spoonFetch('/recipes/complexSearch', {
+            params: {
+              query: nutritionQuery?.value || '',
+              number: 6,
+              minProtein: minProteinNode?.value || '',
+              maxCalories: maxCaloriesNode?.value || '',
+              addRecipeInformation: true,
+              addRecipeNutrition: true,
+            },
+          });
+          recipes = Array.isArray(data?.results) ? data.results : [];
+        } catch (innerError) {
+          if (!serviceUnavailable(innerError)) throw innerError;
+          usedFallback = true;
+          recipes = fallbackSearchNutrition(nutritionQuery?.value, minProteinNode?.value, maxCaloriesNode?.value);
+        }
 
-        const recipes = Array.isArray(data?.results) ? data.results : [];
         if (!recipes.length) {
           nutritionResult.innerHTML = '<p>No matches for those nutrition filters.</p>';
           return;
@@ -1798,15 +1976,18 @@
             `;
           })
           .join('');
+        if (usedFallback) {
+          nutritionResult.innerHTML += '<p class="small-text" style="margin-top:0.45rem;">Using local fallback recipe suggestions because external recipe service is unavailable.</p>';
+        }
 
         updateEngine(
           'Nutrition Requirement Recipe Search',
-          'Generated recipe options filtered by nutrition targets.',
+          usedFallback ? 'Generated local fallback recipe options filtered by nutrition targets.' : 'Generated recipe options filtered by nutrition targets.',
           [
             { title: 'Use Meal Builder', desc: 'Adapt top recipes to current pantry constraints.', cta: 'Open Meal Builder', href: './meal-builder.html' },
             { title: 'Run assessment if risk patterns continue', desc: 'Use the full assessment flow for structured risk output.', cta: 'Open Assessment', href: './assessment.html' },
           ],
-          'Nutrition-based recipe search complete. Review protein and calorie targets.',
+          usedFallback ? 'Fallback nutrition search complete. Review protein and calorie targets.' : 'Nutrition-based recipe search complete. Review protein and calorie targets.',
         );
       } catch (error) {
         nutritionResult.innerHTML = `<p>Nutrition search failed. ${escapeHtml(error.message)}</p>`;
@@ -1823,11 +2004,19 @@
       }
       setLoading(extractResult, true, 'Extracting recipe...');
       try {
-        const recipe = await spoonFetch('/recipes/extract', {
-          params: {
-            url,
-          },
-        });
+        let usedFallback = false;
+        let recipe;
+        try {
+          recipe = await spoonFetch('/recipes/extract', {
+            params: {
+              url,
+            },
+          });
+        } catch (innerError) {
+          if (!serviceUnavailable(innerError)) throw innerError;
+          usedFallback = true;
+          recipe = fallbackExtractRecipe(url);
+        }
 
         const ingredients = (recipe?.extendedIngredients || []).slice(0, 8).map((item) => item.original || item.name).filter(Boolean);
         extractResult.innerHTML = `
@@ -1838,15 +2027,18 @@
             <a class="btn btn-secondary btn-small" href="${escapeHtml(recipe?.sourceUrl || url)}" target="_blank" rel="noreferrer">Open source</a>
           </div>
         `;
+        if (usedFallback) {
+          extractResult.innerHTML += '<p class="small-text" style="margin-top:0.45rem;">Using local fallback extraction because external recipe service is unavailable.</p>';
+        }
 
         updateEngine(
           'Recipe Extraction',
-          'Extracted a recipe from external URL and summarized key ingredients.',
+          usedFallback ? 'Generated a local fallback extraction summary from the URL.' : 'Extracted a recipe from external URL and summarized key ingredients.',
           [
             { title: 'Run Pantry Rescue', desc: 'Check if extracted recipe fits current ingredients.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
             { title: 'Build shopping priorities', desc: 'Prioritize missing foods by impact and budget.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
           ],
-          'Recipe extraction complete. Compare ingredients with pantry and budget tools.',
+          usedFallback ? 'Fallback extraction complete. Compare ingredients with pantry and budget tools.' : 'Recipe extraction complete. Compare ingredients with pantry and budget tools.',
         );
       } catch (error) {
         extractResult.innerHTML = `<p>Extraction failed. ${escapeHtml(error.message)}</p>`;
@@ -1863,10 +2055,18 @@
       }
       setLoading(classifyResult, true, 'Classifying cuisine...');
       try {
-        const data = await spoonFetch('/recipes/cuisine', {
-          method: 'POST',
-          form: { title },
-        });
+        let usedFallback = false;
+        let data;
+        try {
+          data = await spoonFetch('/recipes/cuisine', {
+            method: 'POST',
+            form: { title },
+          });
+        } catch (innerError) {
+          if (!serviceUnavailable(innerError)) throw innerError;
+          usedFallback = true;
+          data = fallbackClassify(title);
+        }
 
         classifyResult.innerHTML = `
           <div class="recipe-mini-card">
@@ -1875,15 +2075,18 @@
             <div class="small-text">Confidence: ${escapeHtml(typeof data?.confidence === 'number' ? data.confidence.toFixed(2) : 'n/a')}</div>
           </div>
         `;
+        if (usedFallback) {
+          classifyResult.innerHTML += '<p class="small-text" style="margin-top:0.45rem;">Using local keyword-based cuisine classification fallback.</p>';
+        }
 
         updateEngine(
           'Cuisine Classification',
-          'Classified recipe cuisine and confidence for culturally relevant meal planning.',
+          usedFallback ? 'Classified cuisine using local keyword fallback model.' : 'Classified recipe cuisine and confidence for culturally relevant meal planning.',
           [
             { title: 'Run nutrition search next', desc: 'Filter recipes by your nutrient target.', cta: 'Nutrition Search', href: './meal-builder.html?recipeTool=nutrition#recipe-widget' },
             { title: 'Adapt to pantry reality', desc: 'Use Pantry Rescue for household constraints.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
           ],
-          'Cuisine classification complete. Use this to adapt culturally relevant meal choices.',
+          usedFallback ? 'Fallback cuisine classification complete.' : 'Cuisine classification complete. Use this to adapt culturally relevant meal choices.',
         );
       } catch (error) {
         classifyResult.innerHTML = `<p>Classification failed. ${escapeHtml(error.message)}</p>`;
@@ -1896,12 +2099,20 @@
       setLoading(mealResult, true, 'Generating meal plan and shopping list...');
       try {
         const timeFrame = mealTimeframeNode?.value || 'day';
-        const plan = await spoonFetch('/mealplanner/generate', {
-          params: {
-            timeFrame,
-            targetCalories: mealCaloriesNode?.value || '',
-          },
-        });
+        let usedFallback = false;
+        let plan;
+        try {
+          plan = await spoonFetch('/mealplanner/generate', {
+            params: {
+              timeFrame,
+              targetCalories: mealCaloriesNode?.value || '',
+            },
+          });
+        } catch (innerError) {
+          if (!serviceUnavailable(innerError)) throw innerError;
+          usedFallback = true;
+          plan = fallbackMealPlan(timeFrame);
+        }
 
         let meals = [];
         if (timeFrame === 'day') {
@@ -1915,7 +2126,9 @@
         }
 
         const uniqueMeals = meals.slice(0, timeFrame === 'day' ? 6 : 12);
-        const shopping = await fetchShoppingList(uniqueMeals.map((meal) => meal.id));
+        const shopping = usedFallback
+          ? fallbackShoppingListFromMeals(uniqueMeals)
+          : await fetchShoppingList(uniqueMeals.map((meal) => meal.id));
 
         mealResult.innerHTML = `
           <div class="recipe-mini-card">
@@ -1933,15 +2146,20 @@
             </ul>
           </div>
         `;
+        if (usedFallback) {
+          mealResult.innerHTML += '<p class="small-text" style="margin-top:0.45rem;">Using local fallback meal planning because external recipe service is unavailable.</p>';
+        }
 
         updateEngine(
           'Meal Plan + Shopping List',
-          `Generated a ${timeFrame} meal plan with shopping priorities.`,
+          usedFallback ? `Generated a local fallback ${timeFrame} meal plan with shopping priorities.` : `Generated a ${timeFrame} meal plan with shopping priorities.`,
           [
             { title: 'Cross-check pantry constraints', desc: 'Use Pantry Rescue if some plan meals are unrealistic.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
             { title: 'Budget tune-up', desc: 'Use Budget Planner to prioritize must-buy foods first.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
           ],
-          `Meal plan generation complete for ${timeFrame} timeframe. Shopping list created from recipe ingredients.`,
+          usedFallback
+            ? `Fallback meal plan generation complete for ${timeFrame} timeframe.`
+            : `Meal plan generation complete for ${timeFrame} timeframe. Shopping list created from recipe ingredients.`,
         );
       } catch (error) {
         mealResult.innerHTML = `<p>Meal plan generation failed. ${escapeHtml(error.message)}</p>`;
@@ -1965,13 +2183,21 @@
         } else if (normalized.includes('fast food') || normalized.includes('burger') || normalized.includes('wrap')) {
           chatResult.innerHTML = '<p>Use Fast Food Remix on the homepage to get a healthier remake with step-by-step instructions.</p>';
         } else {
-          const data = await spoonFetch('/recipes/complexSearch', {
-            params: {
-              query: question,
-              number: 3,
-            },
-          });
-          const hits = Array.isArray(data?.results) ? data.results : [];
+          let usedFallback = false;
+          let hits = [];
+          try {
+            const data = await spoonFetch('/recipes/complexSearch', {
+              params: {
+                query: question,
+                number: 3,
+              },
+            });
+            hits = Array.isArray(data?.results) ? data.results : [];
+          } catch (innerError) {
+            if (!serviceUnavailable(innerError)) throw innerError;
+            usedFallback = true;
+            hits = fallbackSearchNutrition(question, '', '').slice(0, 3);
+          }
           chatResult.innerHTML = `
             <div class="recipe-mini-card">
               <strong>Helper suggestions</strong>
@@ -1980,6 +2206,7 @@
                   ? hits.map((item) => `<li><a href="${escapeHtml(recipeLink(item.id, item.title))}" target="_blank" rel="noreferrer">${escapeHtml(item.title)}</a></li>`).join('')
                   : '<li>No direct recipe matches found. Try simpler ingredients or cuisine terms.</li>'}
               </ul>
+              ${usedFallback ? '<p class="small-text">Using local fallback suggestions.</p>' : ''}
             </div>
           `;
         }
