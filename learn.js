@@ -613,68 +613,187 @@
       {
         keys: ['healthy food', 'too expensive', 'only expensive'],
         verdict: 'Likely myth',
+        shortAnswer: 'No. Healthy eating can still be low-cost.',
         explanation: 'Affordable foods can still build nutrition when you prioritize protein and protective foods first.',
         corrected: 'Healthy food does not have to be expensive if we choose high-impact staples.',
         confidence: 0.86,
         saferNextAction: 'Start with low-cost staples: beans/lentils + frozen/canned vegetables + one protein add-on.',
         action: 'Use Budget Planner to generate a buy-first list for your budget.',
         href: './learn.html?tool=budget#tool-budget-planner',
+        todaySteps: [
+          'Buy one cheap protein first (beans, lentils, eggs, or canned fish).',
+          'Add one protective food (frozen vegetables, cabbage, or fruit).',
+          'Run Budget Planner to build a buy-first list for this week.',
+        ],
       },
       {
         keys: ['overweight', 'cannot be malnourished', 'cant be malnourished'],
         verdict: 'Likely myth',
+        shortAnswer: 'No. Weight alone does not rule out malnutrition.',
         explanation: 'A person can have enough calories but still lack protein, iron, or vitamins.',
         corrected: 'Weight alone does not rule out malnutrition risk.',
         confidence: 0.84,
         saferNextAction: 'Run the assessment and check appetite, fatigue, and meal quality instead of weight alone.',
         action: 'Run Assessment and Pantry Rescue to assess diet quality and warning signals.',
         href: './assessment.html',
+        todaySteps: [
+          'Run Assessment for a structured risk result.',
+          'Check meal quality, not only body weight.',
+          'If warning signs are present, open Urgency Escalation today.',
+        ],
       },
       {
         keys: ['older', 'losing weight is normal', 'seniors naturally eat less'],
         verdict: 'Mixed / context-dependent',
+        shortAnswer: 'Partly. Appetite can change, but ongoing weight loss is not automatically normal.',
         explanation: 'Appetite may change with age, but ongoing weight loss can be a warning sign that needs follow-up.',
         corrected: 'Some appetite change is expected, but persistent weight loss is not automatically normal.',
         confidence: 0.74,
         saferNextAction: 'If weight loss persists for 1-2 weeks, escalate support and review intake urgently.',
         action: 'Use Urgency Tool and Resource Map if warning signs continue.',
         href: './learn.html?tool=escalation#tool-escalation',
+        todaySteps: [
+          'Track appetite and weight trend for 7 days.',
+          'Increase protein in at least 2 meals per day.',
+          'If decline continues, run Urgency Escalation and route support this week.',
+        ],
       },
       {
         keys: ['protein only', 'only meat', 'protein comes from meat'],
         verdict: 'Likely myth',
+        shortAnswer: 'No. Protein does not only come from meat.',
         explanation: 'Protein also comes from beans, lentils, eggs, yogurt, tofu, nuts, and canned fish.',
         corrected: 'Meat is one source, but many affordable non-meat proteins are available.',
         confidence: 0.9,
         saferNextAction: 'Add at least one low-cost non-meat protein to your next meal plan.',
         action: 'Use Budget Planner to prioritize cheaper protein options.',
         href: './learn.html?tool=budget#tool-budget-planner',
+        todaySteps: [
+          'Pick one protein from beans, lentils, eggs, tofu, or yogurt.',
+          'Add it to the next meal you already planned.',
+          'Use Budget Planner to repeat this through the week.',
+        ],
       },
       {
         keys: ['skip meals', 'big dinner', 'skipping meals is fine'],
         verdict: 'Mixed / context-dependent',
+        shortAnswer: 'Usually not ideal. Frequent meal skipping can worsen nutrition gaps.',
         explanation: 'Frequent meal skipping can worsen fatigue and nutrient gaps, especially in children and older adults.',
         corrected: 'Smaller consistent meals are usually safer than long meal gaps.',
         confidence: 0.8,
         saferNextAction: 'Use a simple 3-meal + 1 snack structure when possible, even with small portions.',
         action: 'Use Pantry Rescue to build quick low-cost meals from what you already have.',
         href: './learn.html?tool=pantry#tool-pantry-rescue',
+        todaySteps: [
+          'Set one consistent next meal time today.',
+          'Build a small protein + energy meal now.',
+          'Avoid long fasting gaps if fatigue is increasing.',
+        ],
       },
       {
         keys: ['frozen vegetables', 'frozen veg', 'fresh is always healthier'],
         verdict: 'Likely fact',
+        shortAnswer: 'Yes. Frozen vegetables can be a strong nutrition option.',
         explanation: 'Frozen vegetables can retain nutrients well and are often practical in low-budget settings.',
         corrected: 'Frozen vegetables are a valid and often smart nutrition option.',
         confidence: 0.77,
         saferNextAction: 'Use frozen produce as a reliable fallback when fresh options are limited.',
         action: 'Include frozen vegetables in pantry rescue and budget planning.',
         href: './learn.html?tool=pantry#tool-pantry-rescue',
+        todaySteps: [
+          'Keep one frozen vegetable bag as backup.',
+          'Pair it with a low-cost protein at dinner.',
+          'Use Pantry Rescue to balance the meal.',
+        ],
       },
     ];
 
     function detectRule(text) {
       const normalized = normalizeText(text);
       return rules.find((rule) => rule.keys.some((key) => normalized.includes(normalizeText(key))));
+    }
+
+    const fastFoodSignals = {
+      high: ['fried', 'crispy', 'slider', 'tender', 'fries', 'combo', 'double', 'large', 'mayo', 'shake', 'soda'],
+      lower: ['grilled', 'baked', 'small', 'no fries', 'water', 'veggie', 'salad', 'no sauce'],
+      restaurant: [
+        'daves hot chicken',
+        "dave's hot chicken",
+        'mcdonald',
+        'kfc',
+        'popeyes',
+        'burger king',
+        'wendys',
+        'chick fil a',
+        'chipotle',
+        'taco bell',
+      ],
+    };
+
+    function buildFastFoodOutput(claim, normalized) {
+      const looksFastFood =
+        fastFoodSignals.restaurant.some((name) => normalized.includes(normalizeText(name))) ||
+        normalized.includes('fast food') ||
+        normalized.includes('restaurant');
+      if (!looksFastFood) return null;
+
+      const asksHealth = ['healthy', 'unhealthy', 'good for you', 'bad for you', 'is this true'].some((phrase) => normalized.includes(phrase));
+      if (!asksHealth) return null;
+
+      const highHits = fastFoodSignals.high.filter((word) => normalized.includes(word)).length;
+      const lowHits = fastFoodSignals.lower.filter((word) => normalized.includes(word)).length;
+      const severity = highHits - lowHits;
+
+      const verdict = severity >= 2 ? 'Likely fact (for standard fried combo orders)' : 'Mixed / context-dependent';
+      const confidence = severity >= 2 ? 0.84 : 0.79;
+
+      return {
+        verdict,
+        shortAnswer:
+          verdict.startsWith('Likely fact')
+            ? 'Mostly yes for typical fried combo orders, but it depends on what you order and how often.'
+            : 'It depends. Some fast-food orders are high-risk, others can be improved with better choices.',
+        explanation:
+          'Many fast-food items are high in calories, sodium, and oil, especially fried combos with fries and sugary drinks.',
+        corrected:
+          'Instead of asking if the whole restaurant is healthy/unhealthy, evaluate the exact item, portion, side, and drink.',
+        confidence,
+        saferNextAction:
+          'Use Fast Food Remix on the homepage: keep the craving, reduce oil/sugar, and keep portion size controlled.',
+        action: 'Open Fast Food Remix and rebuild the exact item with practical swaps.',
+        href: './index.html#recipe-tools-shell',
+        todaySteps: [
+          'Choose one main item (skip combo upsizing).',
+          'Swap fries/sugary drink for water or a lighter side.',
+          'Use Fast Food Remix to create a home version for next time.',
+        ],
+      };
+    }
+
+    function buildGenericFoodHealthOutput(normalized) {
+      const asksHealth = ['healthy', 'unhealthy', 'good for you', 'bad for you', 'is this true'].some((phrase) => normalized.includes(phrase));
+      if (!asksHealth) return null;
+
+      const highWords = ['fried', 'soda', 'sugary', 'dessert', 'processed', 'chips', 'candy', 'large portion'];
+      const lowWords = ['grilled', 'boiled', 'baked', 'vegetable', 'fruit', 'whole grain', 'lean protein'];
+      const highHits = highWords.filter((word) => normalized.includes(word)).length;
+      const lowHits = lowWords.filter((word) => normalized.includes(word)).length;
+
+      return {
+        verdict: highHits > lowHits ? 'Mixed / context-dependent' : 'Likely fact',
+        shortAnswer: 'It depends on portion, cooking method, and what you pair it with.',
+        explanation: 'Nutrition impact changes a lot based on frying vs baking, side choices, and drink choices.',
+        corrected: 'Assess the full meal pattern, not only one label like “healthy” or “unhealthy.”',
+        confidence: 0.68,
+        saferNextAction: 'Run Pantry Rescue or Meal Builder to convert this into a better next meal plan.',
+        action: 'Use a practical tool to improve the next meal now.',
+        href: './learn.html?tool=pantry#tool-pantry-rescue',
+        todaySteps: [
+          'Keep the core item if needed.',
+          'Add one protein and one protective food.',
+          'Reduce one high-risk add-on (fried side or sugary drink).',
+        ],
+      };
     }
 
     checkBtn.addEventListener('click', () => {
@@ -685,18 +804,27 @@
         return;
       }
 
+      const normalized = normalizeText(claim);
       const match = detectRule(claim);
+      const fastFoodOutput = buildFastFoodOutput(claim, normalized);
+      const genericHealthOutput = buildGenericFoodHealthOutput(normalized);
       const fallback = {
         verdict: 'Mixed / context-dependent',
+        shortAnswer: 'Unclear with current evidence in this quick checker.',
         explanation: 'We cannot fully verify that exact claim yet with this quick checker.',
         corrected: 'Use a safer rule: prioritize protein, iron support, and warning-sign tracking.',
         confidence: 0.55,
         saferNextAction: 'We can’t fully verify that claim yet, but use this safer guideline: improve meal quality first and monitor warning signs.',
         action: 'Use Assessment or Budget Planner for a decision-ready next step.',
         href: './assessment.html',
+        todaySteps: [
+          'Run Assessment if symptoms are present.',
+          'Improve next meal with protein + protective food.',
+          'Use Budget Planner if affordability is limiting choices.',
+        ],
       };
 
-      const output = match || fallback;
+      const output = match || fastFoodOutput || genericHealthOutput || fallback;
       const actions = [
         { title: 'Run linked tool', desc: output.action, cta: 'Open tool', href: output.href },
         { title: 'Safer next action', desc: output.saferNextAction, cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
@@ -711,9 +839,14 @@
         </div>
         <div class="confidence-meter"><div class="confidence-meter-bar" style="width:${confidencePct}%"></div></div>
         <p class="small-text"><strong>Claim:</strong> ${escapeHtml(claim)}</p>
+        <p class="small-text"><strong>Short answer:</strong> ${escapeHtml(output.shortAnswer || 'Context matters.')}</p>
         <p class="small-text"><strong>Why:</strong> ${escapeHtml(output.explanation)}</p>
         <p class="small-text"><strong>Corrected version:</strong> ${escapeHtml(output.corrected)}</p>
         <p class="small-text"><strong>Safer next action:</strong> ${escapeHtml(output.saferNextAction)}</p>
+        <p class="small-text"><strong>What to do today:</strong></p>
+        <ol class="recipe-list">
+          ${(output.todaySteps || []).slice(0, 3).map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
+        </ol>
         <div class="tool-action-row">
           <a class="btn btn-secondary btn-small" href="${escapeHtml(output.href)}">Take practical action</a>
         </div>
