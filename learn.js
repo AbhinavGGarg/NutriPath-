@@ -503,6 +503,417 @@
     };
   }
 
+  function initAssessmentResultsTool(engine, voice) {
+    const disclaimerNode = document.getElementById('assessment-history-disclaimer');
+    const emptyNode = document.getElementById('assessment-history-empty');
+    const controlsNode = document.getElementById('assessment-history-controls');
+    const primarySelect = document.getElementById('assessment-history-primary');
+    const compareSelect = document.getElementById('assessment-history-compare');
+    const compareButton = document.getElementById('assessment-history-compare-btn');
+    const openButton = document.getElementById('assessment-history-open-btn');
+    const compareResultNode = document.getElementById('assessment-history-compare-result');
+    const listNode = document.getElementById('assessment-history-list');
+
+    if (
+      !disclaimerNode ||
+      !emptyNode ||
+      !controlsNode ||
+      !primarySelect ||
+      !compareSelect ||
+      !compareButton ||
+      !openButton ||
+      !compareResultNode ||
+      !listNode
+    ) {
+      return;
+    }
+
+    function toNumber(value, fallbackValue = 0) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallbackValue;
+    }
+
+    function toTimestamp(value) {
+      const ts = new Date(value || '').getTime();
+      return Number.isFinite(ts) ? ts : 0;
+    }
+
+    function reportKey(report, index) {
+      const id = String(report?.id || '').trim();
+      const created = String(report?.createdAt || '').trim();
+      return id ? `${id}::${created}::${index}` : `report-${created || 'na'}-${index}`;
+    }
+
+    function safeText(value, fallback = 'Not set') {
+      const text = String(value || '').trim();
+      return text || fallback;
+    }
+
+    function riskTrendClass(score) {
+      if (score >= 2) return badgeClass('low');
+      if (score <= -2) return badgeClass('high');
+      return badgeClass('moderate');
+    }
+
+    function riskTrendLabel(score) {
+      if (score >= 2) return 'Improved trend';
+      if (score <= -2) return 'Higher concern trend';
+      return 'Mixed trend';
+    }
+
+    function deficiencySummary(report) {
+      const list = Array.isArray(report?.deficiencies) ? report.deficiencies.slice(0, 3) : [];
+      if (!list.length) return 'No major deficiency flags';
+      return list.map((item) => safeText(item?.name, '')).filter(Boolean).join(', ');
+    }
+
+    function symptomsCount(report) {
+      const selected = Array.isArray(report?.selectedSymptoms) ? report.selectedSymptoms : [];
+      return selected.length;
+    }
+
+    function renderDisclaimer(isLoggedIn) {
+      if (isLoggedIn) {
+        disclaimerNode.className = 'alert alert-success small-text';
+        disclaimerNode.innerHTML =
+          '<strong>Saved history is on.</strong> Assessments are saved to your account on this device while logged in.';
+        return;
+      }
+
+      disclaimerNode.className = 'alert alert-warn small-text';
+      disclaimerNode.innerHTML =
+        '<strong>Guest mode:</strong> assessment history is temporary and resets when you leave. <a href="./auth.html?mode=login&next=./learn.html?tool=results#tool-assessment-results">Log in</a> to save reports and compare over time.';
+    }
+
+    function readReports() {
+      const history = Array.isArray(window.NutriApp?.getHistory?.()) ? window.NutriApp.getHistory() : [];
+      return history
+        .filter((entry) => entry && typeof entry === 'object')
+        .sort((a, b) => toTimestamp(b.createdAt) - toTimestamp(a.createdAt))
+        .map((entry, index) => ({
+          ...entry,
+          __key: reportKey(entry, index),
+        }));
+    }
+
+    function getLabel(report) {
+      const household = safeText(report?.payload?.householdName, 'Household');
+      const risk = safeText(report?.riskOutput?.category, 'Unknown');
+      const when = window.NutriApp?.formatDate ? window.NutriApp.formatDate(report?.createdAt) : safeText(report?.createdAt, 'Unknown date');
+      return `${when} · ${household} · ${risk}`;
+    }
+
+    function fillSelect(selectNode, reports, preferredKey) {
+      const previous = preferredKey || selectNode.value;
+      selectNode.innerHTML = reports
+        .map((report) => `<option value="${escapeHtml(report.__key)}">${escapeHtml(getLabel(report))}</option>`)
+        .join('');
+
+      const exists = reports.some((report) => report.__key === previous);
+      if (exists) {
+        selectNode.value = previous;
+      } else if (reports[0]) {
+        selectNode.value = reports[0].__key;
+      }
+    }
+
+    function findReportByKey(reports, key) {
+      return reports.find((report) => report.__key === key) || null;
+    }
+
+    function riskText(report) {
+      const risk = toNumber(report?.riskOutput?.risk);
+      const category = safeText(report?.riskOutput?.category, 'Unknown');
+      return `${category} (${risk})`;
+    }
+
+    function renderList(reports) {
+      if (!reports.length) {
+        listNode.innerHTML = '';
+        return;
+      }
+
+      listNode.innerHTML = reports
+        .slice(0, 20)
+        .map((report) => {
+          const category = safeText(report?.riskOutput?.category, 'Unknown');
+          const household = safeText(report?.payload?.householdName, 'Household report');
+          const community = safeText(report?.payload?.community, 'Community not set');
+          const createdAt = window.NutriApp?.formatDate ? window.NutriApp.formatDate(report?.createdAt) : safeText(report?.createdAt, 'Unknown date');
+          const riskScore = toNumber(report?.riskOutput?.risk);
+          const followUp = toNumber(report?.followUpDue, 0);
+          return `
+            <article class="history-item">
+              <div class="result-head">
+                <span class="${badgeClass(category)}">${escapeHtml(category)}</span>
+                <span class="small-text">${escapeHtml(createdAt)}</span>
+              </div>
+              <strong>${escapeHtml(household)}</strong>
+              <p class="small-text">${escapeHtml(community)}</p>
+              <div class="assessment-history-meta">
+                <p class="small-text">Risk score: ${escapeHtml(String(riskScore))}</p>
+                <p class="small-text">Follow-up: ${escapeHtml(String(followUp))} day(s)</p>
+                <p class="small-text">Symptoms: ${escapeHtml(String(symptomsCount(report)))}</p>
+              </div>
+              <p class="small-text">Likely gaps: ${escapeHtml(deficiencySummary(report))}</p>
+              <div class="tool-action-row">
+                <button class="btn btn-secondary btn-small" type="button" data-set-primary="${escapeHtml(report.__key)}">Set as current</button>
+                <button class="btn btn-secondary btn-small" type="button" data-set-compare="${escapeHtml(report.__key)}">Set as compare</button>
+                <button class="btn btn-secondary btn-small" type="button" data-open-report="${escapeHtml(report.__key)}">Open full result</button>
+              </div>
+            </article>
+          `;
+        })
+        .join('');
+    }
+
+    function openReport(report) {
+      if (!report || !window.NutriApp?.setCurrentReport) return;
+      window.NutriApp.setCurrentReport(report);
+      window.location.href = './assessment.html?view=results';
+    }
+
+    function buildDeltaLine(label, primaryValue, compareValue, hintPositive, hintNegative) {
+      const delta = primaryValue - compareValue;
+      if (delta === 0) return `${label}: no change.`;
+      if (delta > 0) return `${label}: +${delta} (${hintPositive})`;
+      return `${label}: ${delta} (${hintNegative})`;
+    }
+
+    function compareSelected() {
+      const reports = readReports();
+      if (!reports.length) return;
+
+      const primary = findReportByKey(reports, primarySelect.value) || reports[0];
+      const compare = findReportByKey(reports, compareSelect.value) || reports[1] || null;
+
+      if (!compare || compare.__key === primary.__key) {
+        compareResultNode.classList.remove('hide');
+        compareResultNode.innerHTML = '<p class="small-text">Select two different snapshots to compare changes.</p>';
+        return;
+      }
+
+      const primaryRisk = toNumber(primary?.riskOutput?.risk);
+      const compareRisk = toNumber(compare?.riskOutput?.risk);
+      const riskDelta = primaryRisk - compareRisk;
+
+      const primaryDef = Array.isArray(primary?.deficiencies) ? primary.deficiencies.length : 0;
+      const compareDef = Array.isArray(compare?.deficiencies) ? compare.deficiencies.length : 0;
+      const defDelta = primaryDef - compareDef;
+
+      const primaryDiversity = toNumber(primary?.payload?.dietDiversity);
+      const compareDiversity = toNumber(compare?.payload?.dietDiversity);
+      const diversityDelta = primaryDiversity - compareDiversity;
+
+      const primaryMeals = toNumber(primary?.payload?.mealsPerDay);
+      const compareMeals = toNumber(compare?.payload?.mealsPerDay);
+      const mealsDelta = primaryMeals - compareMeals;
+
+      const primaryFollowUp = toNumber(primary?.followUpDue);
+      const compareFollowUp = toNumber(compare?.followUpDue);
+
+      let trendScore = 0;
+      if (riskDelta < 0) trendScore += 2;
+      if (riskDelta > 0) trendScore -= 2;
+      if (diversityDelta > 0) trendScore += 1;
+      if (diversityDelta < 0) trendScore -= 1;
+      if (mealsDelta > 0) trendScore += 1;
+      if (mealsDelta < 0) trendScore -= 1;
+      if (defDelta < 0) trendScore += 1;
+      if (defDelta > 0) trendScore -= 1;
+
+      const trendLabel = riskTrendLabel(trendScore);
+      const trendClass = riskTrendClass(trendScore);
+
+      const summaryLines = [
+        buildDeltaLine('Risk score', primaryRisk, compareRisk, 'higher concern', 'improved'),
+        buildDeltaLine('Diet diversity', primaryDiversity, compareDiversity, 'more variety', 'less variety'),
+        buildDeltaLine('Meals per day', primaryMeals, compareMeals, 'higher frequency', 'lower frequency'),
+        buildDeltaLine('Deficiency flags', primaryDef, compareDef, 'more gaps', 'fewer gaps'),
+        buildDeltaLine('Follow-up window', primaryFollowUp, compareFollowUp, 'longer interval', 'more urgent interval'),
+      ];
+
+      compareResultNode.classList.remove('hide');
+      compareResultNode.innerHTML = `
+        <div class="result-head">
+          <span class="${trendClass}">${escapeHtml(trendLabel)}</span>
+          <span class="small-text">Comparing selected snapshots</span>
+        </div>
+        <table class="table assessment-compare-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Current snapshot</th>
+              <th>Compared snapshot</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Date</td>
+              <td>${escapeHtml(window.NutriApp?.formatDate ? window.NutriApp.formatDate(primary?.createdAt) : safeText(primary?.createdAt, 'Unknown'))}</td>
+              <td>${escapeHtml(window.NutriApp?.formatDate ? window.NutriApp.formatDate(compare?.createdAt) : safeText(compare?.createdAt, 'Unknown'))}</td>
+            </tr>
+            <tr>
+              <td>Household / Community</td>
+              <td>${escapeHtml(safeText(primary?.payload?.householdName, 'Household'))} · ${escapeHtml(safeText(primary?.payload?.community, 'Community not set'))}</td>
+              <td>${escapeHtml(safeText(compare?.payload?.householdName, 'Household'))} · ${escapeHtml(safeText(compare?.payload?.community, 'Community not set'))}</td>
+            </tr>
+            <tr>
+              <td>Risk</td>
+              <td>${escapeHtml(riskText(primary))}</td>
+              <td>${escapeHtml(riskText(compare))}</td>
+            </tr>
+            <tr>
+              <td>Meals/day</td>
+              <td>${escapeHtml(String(primaryMeals))}</td>
+              <td>${escapeHtml(String(compareMeals))}</td>
+            </tr>
+            <tr>
+              <td>Diet diversity</td>
+              <td>${escapeHtml(String(primaryDiversity))}/10</td>
+              <td>${escapeHtml(String(compareDiversity))}/10</td>
+            </tr>
+            <tr>
+              <td>Deficiency flags</td>
+              <td>${escapeHtml(String(primaryDef))} (${escapeHtml(deficiencySummary(primary))})</td>
+              <td>${escapeHtml(String(compareDef))} (${escapeHtml(deficiencySummary(compare))})</td>
+            </tr>
+            <tr>
+              <td>Follow-up due</td>
+              <td>${escapeHtml(String(primaryFollowUp))} day(s)</td>
+              <td>${escapeHtml(String(compareFollowUp))} day(s)</td>
+            </tr>
+          </tbody>
+        </table>
+        <h4 style="margin-top:0.6rem;">What changed</h4>
+        <ol class="recipe-list">
+          ${summaryLines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
+        </ol>
+      `;
+
+      const voiceSummary = `${trendLabel}. Risk score moved from ${compareRisk} to ${primaryRisk}. Meals per day changed from ${compareMeals} to ${primaryMeals}.`;
+      voice.setLatest(voiceSummary);
+      engine.update({
+        title: `Assessment comparison: ${trendLabel}`,
+        summary: `Compared two snapshots. Current risk is ${safeText(primary?.riskOutput?.category, 'Unknown')} versus ${safeText(compare?.riskOutput?.category, 'Unknown')}.`,
+        steps: [
+          { title: 'Open full current result', desc: 'Review complete report details and actions.', cta: 'Open current snapshot', href: './assessment.html?view=results' },
+          { title: 'Run a new assessment', desc: 'Capture a fresh snapshot and re-check trend.', cta: 'Take Assessment', href: './assessment.html' },
+          { title: 'Route support if concern rises', desc: 'If trend worsened, find nearby support now.', cta: 'Open Resource Map', href: './map.html' },
+        ],
+      });
+    }
+
+    function render() {
+      const isLoggedIn = Boolean(window.NutriApp?.isAuthenticated?.());
+      const reports = readReports();
+
+      renderDisclaimer(isLoggedIn);
+      renderList(reports);
+
+      if (!reports.length) {
+        controlsNode.classList.add('hide');
+        compareButton.disabled = true;
+        openButton.disabled = true;
+        compareResultNode.classList.add('hide');
+        compareResultNode.innerHTML = '';
+
+        emptyNode.classList.remove('hide');
+        emptyNode.innerHTML = isLoggedIn
+          ? '<p class="small-text">No saved assessments yet. Run Assessment once to create your first snapshot.</p><div class="tool-action-row"><a class="btn btn-secondary btn-small" href="./assessment.html">Run Assessment</a></div>'
+          : '<p class="small-text">No temporary reports in this guest session yet. Log in to keep long-term history and comparisons.</p><div class="tool-action-row"><a class="btn btn-secondary btn-small" href="./auth.html?mode=login&next=./learn.html?tool=results#tool-assessment-results">Log in</a><a class="btn btn-secondary btn-small" href="./assessment.html">Run Assessment</a></div>';
+        return;
+      }
+
+      controlsNode.classList.remove('hide');
+      emptyNode.classList.add('hide');
+
+      fillSelect(primarySelect, reports);
+      fillSelect(compareSelect, reports);
+
+      if (reports.length > 1 && compareSelect.value === primarySelect.value) {
+        const alternate = reports.find((report) => report.__key !== primarySelect.value);
+        if (alternate) compareSelect.value = alternate.__key;
+      }
+
+      compareButton.disabled = reports.length < 2;
+      compareSelect.disabled = reports.length < 2;
+      openButton.disabled = reports.length < 1;
+
+      if (reports.length > 1) {
+        compareSelected();
+      } else {
+        const only = reports[0];
+        compareResultNode.classList.remove('hide');
+        compareResultNode.innerHTML = `
+          <div class="result-head">
+            <span class="${badgeClass(safeText(only?.riskOutput?.category, 'Low'))}">${escapeHtml(safeText(only?.riskOutput?.category, 'Unknown'))}</span>
+            <span class="small-text">${escapeHtml(window.NutriApp?.formatDate ? window.NutriApp.formatDate(only?.createdAt) : safeText(only?.createdAt, 'Unknown'))}</span>
+          </div>
+          <p class="small-text"><strong>Current snapshot:</strong> ${escapeHtml(safeText(only?.payload?.householdName, 'Household'))} · ${escapeHtml(safeText(only?.payload?.community, 'Community not set'))}</p>
+          <p class="small-text"><strong>Risk score:</strong> ${escapeHtml(String(toNumber(only?.riskOutput?.risk)))} · <strong>Meals/day:</strong> ${escapeHtml(String(toNumber(only?.payload?.mealsPerDay)))} · <strong>Diversity:</strong> ${escapeHtml(String(toNumber(only?.payload?.dietDiversity)))}/10</p>
+          <p class="small-text"><strong>Likely gaps:</strong> ${escapeHtml(deficiencySummary(only))}</p>
+          <p class="small-text">Run one more assessment to unlock side-by-side comparison.</p>
+        `;
+      }
+    }
+
+    compareButton.addEventListener('click', compareSelected);
+
+    primarySelect.addEventListener('change', () => {
+      if (compareSelect.value === primarySelect.value) {
+        const reports = readReports();
+        const alternate = reports.find((report) => report.__key !== primarySelect.value);
+        if (alternate) compareSelect.value = alternate.__key;
+      }
+      if (!compareButton.disabled) compareSelected();
+    });
+
+    compareSelect.addEventListener('change', () => {
+      if (!compareButton.disabled) compareSelected();
+    });
+
+    openButton.addEventListener('click', () => {
+      const reports = readReports();
+      const primary = findReportByKey(reports, primarySelect.value) || reports[0];
+      if (primary) openReport(primary);
+    });
+
+    listNode.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      const setPrimaryKey = target.getAttribute('data-set-primary');
+      if (setPrimaryKey) {
+        primarySelect.value = setPrimaryKey;
+        if (compareSelect.value === primarySelect.value) {
+          const reports = readReports();
+          const alternate = reports.find((report) => report.__key !== primarySelect.value);
+          if (alternate) compareSelect.value = alternate.__key;
+        }
+        if (!compareButton.disabled) compareSelected();
+        return;
+      }
+
+      const setCompareKey = target.getAttribute('data-set-compare');
+      if (setCompareKey) {
+        compareSelect.value = setCompareKey;
+        if (!compareButton.disabled) compareSelected();
+        return;
+      }
+
+      const openKey = target.getAttribute('data-open-report');
+      if (openKey) {
+        const reports = readReports();
+        const selected = findReportByKey(reports, openKey);
+        if (selected) openReport(selected);
+      }
+    });
+
+    window.addEventListener('nutri:lang-changed', render);
+    render();
+  }
+
   function initBudgetPlanner(engine, voice) {
     const budgetNode = document.getElementById('budget-weekly');
     const sizeNode = document.getElementById('budget-household');
@@ -2405,6 +2816,7 @@
     focusHideSelectors: ['#meal-rescue-builder', '#meal-links'],
   });
 
+  initAssessmentResultsTool(engine, voice);
   initBudgetPlanner(engine, voice);
   initPantryRescue(engine, voice);
   initEscalationTool(engine, voice);

@@ -37,6 +37,7 @@
 
  <section class="section tool-tabs-shell" id="action-tools-shell">
  <aside class="tool-tabs-nav" role="tablist" aria-label="Action tools">
+ <a class="tool-tab-btn" href="./learn.html?tool=results#tool-assessment-results" data-tab="results">Assessment Results</a>
  <a class="tool-tab-btn active" href="./learn.html?tool=budget#tool-budget-planner" data-tab="budget">Budget Planner</a>
  <a class="tool-tab-btn" href="./learn.html?tool=pantry#tool-pantry-rescue" data-tab="pantry">Pantry Rescue</a>
  <a class="tool-tab-btn" href="./learn.html?tool=escalation#tool-escalation" data-tab="escalation">Urgency Escalation</a>
@@ -47,6 +48,34 @@
  <div class="tool-focus-actions hide" data-focus-actions>
  <a class="btn btn-secondary btn-small" href="./learn.html">View all Action Hub tools</a>
  </div>
+ <article class="card tool-card tool-panel" id="tool-assessment-results" data-tool-tab="results">
+ <h3>Assessment Results</h3>
+ <p class="small-text">Review previous assessment snapshots and compare changes over time.</p>
+ <div id="assessment-history-disclaimer" class="alert alert-warn small-text"></div>
+ <div id="assessment-history-empty" class="tool-result hide"></div>
+
+ <div id="assessment-history-controls" class="history-compare-grid">
+ <div class="field">
+ <label for="assessment-history-primary">Current snapshot</label>
+ <select id="assessment-history-primary"></select>
+ </div>
+ <div class="field">
+ <label for="assessment-history-compare">Compare against</label>
+ <select id="assessment-history-compare"></select>
+ </div>
+ </div>
+
+ <div class="cta-row" style="margin-top: 0.72rem;">
+ <button id="assessment-history-compare-btn" class="btn btn-primary" type="button">Compare snapshots</button>
+ <button id="assessment-history-open-btn" class="btn btn-secondary" type="button">Open current snapshot</button>
+ </div>
+
+ <div id="assessment-history-compare-result" class="tool-result hide"></div>
+
+ <h4 style="margin-top: 0.78rem;">Previous assessments</h4>
+ <div id="assessment-history-list" class="history-list"></div>
+ </article>
+
  <article class="card tool-card tool-panel is-active" id="tool-budget-planner" data-tool-tab="budget">
  <h3>Food Budget Recovery Planner</h3>
  <p class="small-text">Create a realistic low-cost nutrition plan when money, storage, and cooking tools are limited.</p>
