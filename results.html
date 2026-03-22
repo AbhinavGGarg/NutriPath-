@@ -40,10 +40,20 @@
  <div class="risk-ring" id="risk-ring"><strong id="risk-score">0</strong></div>
  <p><strong id="risk-category"></strong></p>
  <div id="risk-alert" class="alert" role="status"></div>
+ <div class="field summary-audience-field">
+ <label for="summary-audience">Summary audience</label>
+ <select id="summary-audience">
+ <option value="caregiver">Caregiver / Family</option>
+ <option value="clinic">Clinic / Health Team</option>
+ <option value="ngo">NGO / Food Support Partner</option>
+ </select>
+ </div>
  <div class="cta-row" style="margin-top: 0.75rem;">
  <button class="btn btn-secondary" id="speak-btn" type="button" data-i18n="results_btn_read">Read aloud</button>
  <button class="btn btn-secondary" id="print-btn" type="button" data-i18n="results_btn_print">Print summary</button>
+ <button class="btn btn-secondary" id="share-btn" type="button">Share summary</button>
  </div>
+ <p id="share-status" class="small-text" style="margin: 0.5rem 0 0;"></p>
  </article>
 
  <article class="card">

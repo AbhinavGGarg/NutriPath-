@@ -9,6 +9,18 @@
   const VOICE_API_BASE = 'https://dev.voice.ai/api/v1';
   const SPOONACULAR_API_BASE = 'https://api.spoonacular.com';
   const SPOONACULAR_PROXY_PATH = '/api/spoonacular';
+  const RESTRICTION_LOCK_KEY = 'nutriRestrictionLockV1';
+  const RESTRICTION_LABELS = {
+    vegetarian: 'Vegetarian',
+    vegan: 'Vegan',
+    halal: 'Halal',
+    kosher: 'Kosher',
+    dairy_free: 'Dairy-free',
+    gluten_free: 'Gluten-free',
+    nut_free: 'Nut-free',
+    shellfish_free: 'Shellfish-free',
+    egg_free: 'Egg-free',
+  };
 
   function escapeHtml(value) {
     return String(value || '')
@@ -28,6 +40,35 @@
       .trim();
   }
 
+  function restrictionLabel(key) {
+    return RESTRICTION_LABELS[String(key || '')] || String(key || '');
+  }
+
+  function getSavedRestrictionLock() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(RESTRICTION_LOCK_KEY) || '[]');
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .map((item) => String(item || '').trim())
+        .filter((item) => RESTRICTION_LABELS[item]);
+    } catch {
+      return [];
+    }
+  }
+
+  function setSavedRestrictionLock(list) {
+    const safeList = Array.isArray(list)
+      ? list
+          .map((item) => String(item || '').trim())
+          .filter((item) => RESTRICTION_LABELS[item])
+      : [];
+    localStorage.setItem(RESTRICTION_LOCK_KEY, JSON.stringify([...new Set(safeList)]));
+  }
+
+  function activeRestrictionSet() {
+    return new Set(getSavedRestrictionLock());
+  }
+
   function listToHtml(items, emptyText) {
     if (!items.length) return `<li>${escapeHtml(emptyText)}</li>`;
     return items.map((item) => `<li>${item}</li>`).join('');
@@ -36,6 +77,9 @@
   function badgeClass(level) {
     const key = String(level || '').toLowerCase();
     if (key.includes('urgent')) return 'severity-badge severity-urgent';
+    if (key.includes('myth')) return 'severity-badge severity-high';
+    if (key.includes('mixed')) return 'severity-badge severity-moderate';
+    if (key.includes('fact')) return 'severity-badge severity-low';
     if (key.includes('high') || key.includes('support this week')) return 'severity-badge severity-high';
     if (key.includes('moderate') || key.includes('improve meals')) return 'severity-badge severity-moderate';
     return 'severity-badge severity-low';
@@ -571,6 +615,8 @@
         verdict: 'Likely myth',
         explanation: 'Affordable foods can still build nutrition when you prioritize protein and protective foods first.',
         corrected: 'Healthy food does not have to be expensive if we choose high-impact staples.',
+        confidence: 0.86,
+        saferNextAction: 'Start with low-cost staples: beans/lentils + frozen/canned vegetables + one protein add-on.',
         action: 'Use Budget Planner to generate a buy-first list for your budget.',
         href: './learn.html?tool=budget#tool-budget-planner',
       },
@@ -579,14 +625,18 @@
         verdict: 'Likely myth',
         explanation: 'A person can have enough calories but still lack protein, iron, or vitamins.',
         corrected: 'Weight alone does not rule out malnutrition risk.',
+        confidence: 0.84,
+        saferNextAction: 'Run the assessment and check appetite, fatigue, and meal quality instead of weight alone.',
         action: 'Run Assessment and Pantry Rescue to assess diet quality and warning signals.',
         href: './assessment.html',
       },
       {
         keys: ['older', 'losing weight is normal', 'seniors naturally eat less'],
-        verdict: 'Partly true / depends',
+        verdict: 'Mixed / context-dependent',
         explanation: 'Appetite may change with age, but ongoing weight loss can be a warning sign that needs follow-up.',
         corrected: 'Some appetite change is expected, but persistent weight loss is not automatically normal.',
+        confidence: 0.74,
+        saferNextAction: 'If weight loss persists for 1-2 weeks, escalate support and review intake urgently.',
         action: 'Use Urgency Tool and Resource Map if warning signs continue.',
         href: './learn.html?tool=escalation#tool-escalation',
       },
@@ -595,15 +645,29 @@
         verdict: 'Likely myth',
         explanation: 'Protein also comes from beans, lentils, eggs, yogurt, tofu, nuts, and canned fish.',
         corrected: 'Meat is one source, but many affordable non-meat proteins are available.',
+        confidence: 0.9,
+        saferNextAction: 'Add at least one low-cost non-meat protein to your next meal plan.',
         action: 'Use Budget Planner to prioritize cheaper protein options.',
         href: './learn.html?tool=budget#tool-budget-planner',
       },
       {
         keys: ['skip meals', 'big dinner', 'skipping meals is fine'],
-        verdict: 'Partly true / depends',
+        verdict: 'Mixed / context-dependent',
         explanation: 'Frequent meal skipping can worsen fatigue and nutrient gaps, especially in children and older adults.',
         corrected: 'Smaller consistent meals are usually safer than long meal gaps.',
+        confidence: 0.8,
+        saferNextAction: 'Use a simple 3-meal + 1 snack structure when possible, even with small portions.',
         action: 'Use Pantry Rescue to build quick low-cost meals from what you already have.',
+        href: './learn.html?tool=pantry#tool-pantry-rescue',
+      },
+      {
+        keys: ['frozen vegetables', 'frozen veg', 'fresh is always healthier'],
+        verdict: 'Likely fact',
+        explanation: 'Frozen vegetables can retain nutrients well and are often practical in low-budget settings.',
+        corrected: 'Frozen vegetables are a valid and often smart nutrition option.',
+        confidence: 0.77,
+        saferNextAction: 'Use frozen produce as a reliable fallback when fresh options are limited.',
+        action: 'Include frozen vegetables in pantry rescue and budget planning.',
         href: './learn.html?tool=pantry#tool-pantry-rescue',
       },
     ];
@@ -623,9 +687,11 @@
 
       const match = detectRule(claim);
       const fallback = {
-        verdict: 'Partly true / depends',
+        verdict: 'Mixed / context-dependent',
         explanation: 'We cannot fully verify that exact claim yet with this quick checker.',
         corrected: 'Use a safer rule: prioritize protein, iron support, and warning-sign tracking.',
+        confidence: 0.55,
+        saferNextAction: 'We can’t fully verify that claim yet, but use this safer guideline: improve meal quality first and monitor warning signs.',
         action: 'Use Assessment or Budget Planner for a decision-ready next step.',
         href: './assessment.html',
       };
@@ -633,23 +699,27 @@
       const output = match || fallback;
       const actions = [
         { title: 'Run linked tool', desc: output.action, cta: 'Open tool', href: output.href },
-        { title: 'Improve meals now', desc: 'Use Pantry Rescue with foods currently available.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
+        { title: 'Safer next action', desc: output.saferNextAction, cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
       ];
+      const confidencePct = Math.max(20, Math.min(98, Math.round(Number(output.confidence || 0) * 100)));
 
       resultNode.classList.remove('hide');
       resultNode.innerHTML = `
         <div class="result-head">
           <span class="${badgeClass(output.verdict)}">${escapeHtml(output.verdict)}</span>
+          <span class="small-text">Confidence: ${confidencePct}%</span>
         </div>
+        <div class="confidence-meter"><div class="confidence-meter-bar" style="width:${confidencePct}%"></div></div>
         <p class="small-text"><strong>Claim:</strong> ${escapeHtml(claim)}</p>
         <p class="small-text"><strong>Why:</strong> ${escapeHtml(output.explanation)}</p>
         <p class="small-text"><strong>Corrected version:</strong> ${escapeHtml(output.corrected)}</p>
+        <p class="small-text"><strong>Safer next action:</strong> ${escapeHtml(output.saferNextAction)}</p>
         <div class="tool-action-row">
           <a class="btn btn-secondary btn-small" href="${escapeHtml(output.href)}">Take practical action</a>
         </div>
       `;
 
-      const voiceSummary = `${output.verdict}. ${output.explanation} Corrected statement: ${output.corrected}.`;
+      const voiceSummary = `${output.verdict} with ${confidencePct} percent confidence. ${output.explanation} Safer next action: ${output.saferNextAction}.`;
       voice.setLatest(voiceSummary);
       engine.update({
         title: `Claim Checker: ${output.verdict}`,
@@ -769,6 +839,10 @@
     const addButton = document.getElementById('hub-add-food');
     const clearButton = document.getElementById('hub-clear-foods');
     const analyzeButton = document.getElementById('hub-analyze-foods');
+    const lockGrid = document.getElementById('nutrition-lock-grid');
+    const lockApplyButton = document.getElementById('nutrition-lock-apply');
+    const lockClearButton = document.getElementById('nutrition-lock-clear');
+    const lockStatusNode = document.getElementById('nutrition-lock-status');
     const selectedNode = document.getElementById('hub-selected-foods');
     const statusNode = document.getElementById('hub-food-status');
     const resultShell = document.getElementById('hub-food-results');
@@ -783,7 +857,20 @@
     const qualityNode = document.getElementById('hub-quality-result');
     const nextStepsNode = document.getElementById('hub-next-steps');
 
-    if (!input || !datalist || !addButton || !clearButton || !analyzeButton || !selectedNode || !statusNode || !resultShell || !mealList || !gapList || !swapList || !nextStepsNode) {
+    if (
+      !input ||
+      !datalist ||
+      !addButton ||
+      !clearButton ||
+      !analyzeButton ||
+      !selectedNode ||
+      !statusNode ||
+      !resultShell ||
+      !mealList ||
+      !gapList ||
+      !swapList ||
+      !nextStepsNode
+    ) {
       return;
     }
 
@@ -805,6 +892,61 @@
 
     const criticalNutrients = ['protein', 'iron', 'vitaminA', 'vitaminC', 'fiber', 'calories'];
     const processedKeywords = ['chips', 'cookie', 'soda', 'instant noodle', 'ramen', 'candy', 'pastry'];
+    const restrictionRules = {
+      vegetarian: ['chicken', 'beef', 'pork', 'fish', 'tuna', 'sardine', 'shrimp', 'meat', 'turkey'],
+      vegan: ['chicken', 'beef', 'pork', 'fish', 'tuna', 'sardine', 'shrimp', 'meat', 'turkey', 'egg', 'milk', 'yogurt', 'cheese', 'butter'],
+      halal: ['pork', 'ham', 'bacon'],
+      kosher: ['pork', 'ham', 'bacon', 'shellfish', 'shrimp', 'crab', 'lobster'],
+      dairy_free: ['milk', 'yogurt', 'cheese', 'butter', 'cream'],
+      gluten_free: ['wheat', 'bread', 'pasta', 'noodle', 'flour', 'barley', 'rye'],
+      nut_free: ['peanut', 'almond', 'cashew', 'walnut', 'pistachio', 'hazelnut', 'nut '],
+      shellfish_free: ['shrimp', 'prawn', 'crab', 'lobster', 'clam', 'mussel', 'oyster', 'shellfish'],
+      egg_free: ['egg', 'eggs'],
+    };
+
+    function activeLocks() {
+      return activeRestrictionSet();
+    }
+
+    function lockLabels(set) {
+      return [...set].map((key) => restrictionLabel(key));
+    }
+
+    function syncLockInputsFromStorage() {
+      if (!lockGrid) return;
+      const locks = activeLocks();
+      [...lockGrid.querySelectorAll('input[type="checkbox"]')].forEach((inputNode) => {
+        inputNode.checked = locks.has(inputNode.value);
+      });
+    }
+
+    function selectedLocksFromUi() {
+      if (!lockGrid) return activeLocks();
+      const set = new Set(
+        [...lockGrid.querySelectorAll('input[type="checkbox"]:checked')]
+          .map((inputNode) => inputNode.value)
+          .filter((value) => RESTRICTION_LABELS[value]),
+      );
+      if (set.has('vegan')) set.add('vegetarian');
+      return set;
+    }
+
+    function describeLockStatus() {
+      if (!lockStatusNode) return;
+      const labels = lockLabels(activeLocks());
+      lockStatusNode.textContent = labels.length ? `Active locks: ${labels.join(', ')}` : 'No active locks.';
+    }
+
+    function isFoodBlockedByLocks(food, lockSet) {
+      if (!lockSet.size) return false;
+      const text = normalizeText(food?.name || '');
+      if (!text) return false;
+      for (const lockKey of lockSet) {
+        const words = restrictionRules[lockKey] || [];
+        if (words.some((word) => text.includes(word))) return true;
+      }
+      return false;
+    }
 
     function foodLabel(food) {
       if (food.custom) return food.name;
@@ -956,8 +1098,29 @@
         return;
       }
 
-      const coverage = analyzeCoverage(selected);
-      const bestNow = buildRescueMeals(selected);
+      const lockSet = activeLocks();
+      const blockedFoods = selected.filter((food) => isFoodBlockedByLocks(food, lockSet));
+      const allowedFoods = selected.filter((food) => !isFoodBlockedByLocks(food, lockSet));
+      const lockLabelText = lockLabels(lockSet).join(', ');
+
+      if (lockSet.size && !allowedFoods.length) {
+        const blockedNames = blockedFoods.map((food) => foodLabel(food)).join(', ');
+        resultShell.classList.remove('hide');
+        clearOutputs();
+        qualityNode.innerHTML = `
+          <div class="result-head">
+            <span class="${badgeClass('high')}">Needs improvement</span>
+          </div>
+          <p class="small-text">All selected foods conflict with active locks (${escapeHtml(lockLabelText)}).</p>
+          <p class="small-text">Blocked foods: ${escapeHtml(blockedNames || 'Current selection')}</p>
+          <p class="small-text"><strong>Start with this:</strong> add lock-safe staples like beans, lentils, oats, frozen vegetables, and fruit.</p>
+        `;
+        setStatus('No lock-safe foods available in current selection. Add alternatives and run again.');
+        return;
+      }
+
+      const coverage = analyzeCoverage(allowedFoods);
+      const bestNow = buildRescueMeals(allowedFoods);
 
       const strengths = [...coverage.keys()]
         .filter((nutrient) => criticalNutrients.includes(nutrient))
@@ -982,18 +1145,36 @@
           return `<strong>${escapeHtml(nutrientTitle[nutrient] || nutrient)}:</strong> ${escapeHtml(msg)}`;
         });
 
-      const lowCostAdds = [
-        'Eggs',
-        'Dry beans',
-        'Lentils',
-        'Peanut butter',
-        'Canned tuna',
-        'Frozen mixed vegetables',
+      const lowCostCandidates = [
+        { name: 'Eggs', tags: ['egg'] },
+        { name: 'Dry beans', tags: ['vegetarian', 'vegan', 'halal', 'kosher', 'dairy_free', 'gluten_free'] },
+        { name: 'Lentils', tags: ['vegetarian', 'vegan', 'halal', 'kosher', 'dairy_free', 'gluten_free'] },
+        { name: 'Peanut butter', tags: ['vegetarian', 'vegan', 'halal', 'kosher', 'dairy_free'] },
+        { name: 'Canned tuna', tags: ['dairy_free', 'gluten_free'] },
+        { name: 'Frozen mixed vegetables', tags: ['vegetarian', 'vegan', 'halal', 'kosher', 'dairy_free', 'gluten_free', 'nut_free', 'shellfish_free', 'egg_free'] },
       ];
+      const disallowByLock = {
+        vegan: ['egg', 'fish', 'dairy'],
+        vegetarian: ['fish'],
+        dairy_free: ['dairy'],
+        nut_free: ['nut'],
+        egg_free: ['egg'],
+        shellfish_free: ['shellfish'],
+        halal: ['pork'],
+        kosher: ['shellfish', 'pork'],
+      };
+      const lowCostAdds = lowCostCandidates
+        .filter((item) =>
+          [...lockSet].every((lockKey) => {
+            const blockedTags = disallowByLock[lockKey] || [];
+            return !blockedTags.some((blocked) => item.tags.includes(blocked) || item.name.toLowerCase().includes(blocked));
+          }),
+        )
+        .map((item) => item.name);
 
       const betterVersion = [
-        `<strong>Upgrade option:</strong> keep your current meal and add one protein (${escapeHtml(lowCostAdds[0])} or ${escapeHtml(lowCostAdds[1])}) plus one protective food (${escapeHtml(lowCostAdds[5])}).`,
-        `<strong>If budget is tight:</strong> add ${escapeHtml(lowCostAdds[3])} to breakfast and ${escapeHtml(lowCostAdds[2])} to one main meal this week.`,
+        `<strong>Upgrade option:</strong> keep your current meal and add one protein (${escapeHtml(lowCostAdds[0] || 'beans')} or ${escapeHtml(lowCostAdds[1] || 'lentils')}) plus one protective food (${escapeHtml(lowCostAdds[5] || 'frozen vegetables')}).`,
+        `<strong>If budget is tight:</strong> add ${escapeHtml(lowCostAdds[3] || 'beans')} to breakfast and ${escapeHtml(lowCostAdds[2] || 'lentils')} to one main meal this week.`,
       ];
 
       const swaps = [
@@ -1002,7 +1183,20 @@
         'Only refined carbs at home? Add beans or peanut butter to reduce nutrient gaps.',
       ];
 
-      const normalizedSelected = normalizeText(selected.map((item) => item.name).join(' '));
+      if (lockSet.has('vegan')) {
+        swaps.push('Vegan lock active: use beans, lentils, tofu, oats, and vegetable-based sauces instead of dairy/eggs.');
+      }
+      if (lockSet.has('dairy_free')) {
+        swaps.push('Dairy-free lock active: use tahini/lemon sauces or broth-based options instead of yogurt/cheese.');
+      }
+      if (lockSet.has('gluten_free')) {
+        swaps.push('Gluten-free lock active: use rice, potatoes, corn tortillas, and gluten-free oats.');
+      }
+      if (lockSet.has('nut_free')) {
+        swaps.push('Nut-free lock active: replace peanut butter with hummus, beans, or seed-based options if tolerated.');
+      }
+
+      const normalizedSelected = normalizeText(allowedFoods.map((item) => item.name).join(' '));
       const processedHits = processedKeywords.filter((word) => normalizedSelected.includes(word));
       if (processedHits.length) {
         swaps.push('Processed-food heavy pattern detected. Keep current foods if needed, but pair each meal with protein + one protective food.');
@@ -1012,7 +1206,7 @@
         (coverage.has('protein') ? 2 : 0) +
         (coverage.has('iron') ? 1 : 0) +
         (coverage.has('vitaminA') || coverage.has('vitaminC') ? 1 : 0) +
-        (selected.length >= 3 ? 1 : 0) -
+        (allowedFoods.length >= 3 ? 1 : 0) -
         (processedHits.length ? 1 : 0);
 
       const qualityText = qualityScore >= 4 ? 'Good enough for now' : 'Needs improvement';
@@ -1038,6 +1232,8 @@
             <span class="${badgeClass(qualityText)}">${escapeHtml(qualityText)}</span>
           </div>
           <p class="small-text">${escapeHtml(qualityMessage)}</p>
+          ${lockSet.size ? `<p class="small-text"><strong>Restriction lock:</strong> ${escapeHtml(lockLabelText)}</p>` : ''}
+          ${blockedFoods.length ? `<p class="small-text"><strong>Excluded due to lock:</strong> ${escapeHtml(blockedFoods.map((food) => foodLabel(food)).join(', '))}</p>` : ''}
         `;
       }
 
@@ -1049,7 +1245,7 @@
       `;
 
       resultShell.classList.remove('hide');
-      setStatus(`Rescue plan ready for ${selected.length} food item(s).`);
+      setStatus(`Rescue plan ready for ${allowedFoods.length} lock-safe food item(s).`);
 
       const nextSteps = [
         { title: 'Check household risk', desc: 'Use Assessment if symptoms or low appetite are present.', cta: 'Open Assessment', href: './assessment.html' },
@@ -1057,7 +1253,7 @@
         { title: 'Find support if access is unstable', desc: 'Locate verified clinics and food support.', cta: 'Open Resource Map', href: './map.html' },
       ];
 
-      const voiceSummary = `${qualityText}. ${qualityMessage} Best action now: make the rescue meal, then add one cheap protein and one protective food.`;
+      const voiceSummary = `${qualityText}. ${qualityMessage} ${lockSet.size ? `Restriction lock active: ${lockLabelText}. ` : ''}Best action now: make the rescue meal, then add one cheap protein and one protective food.`;
       voice.setLatest(voiceSummary);
       engine.update({
         title: `Pantry Rescue: ${qualityText}`,
@@ -1092,6 +1288,28 @@
       renderSelectedFoods();
     });
 
+    lockApplyButton?.addEventListener('click', () => {
+      const selectedLocks = selectedLocksFromUi();
+      setSavedRestrictionLock([...selectedLocks]);
+      describeLockStatus();
+      clearOutputs();
+      resultShell.classList.add('hide');
+      setStatus(selectedLocks.size ? 'Restriction lock updated. Run rescue plan with lock-safe foods.' : 'Lock cleared. Run rescue plan.');
+    });
+
+    lockClearButton?.addEventListener('click', () => {
+      if (lockGrid) {
+        [...lockGrid.querySelectorAll('input[type="checkbox"]')].forEach((inputNode) => {
+          inputNode.checked = false;
+        });
+      }
+      setSavedRestrictionLock([]);
+      describeLockStatus();
+      clearOutputs();
+      resultShell.classList.add('hide');
+      setStatus('Restriction lock cleared.');
+    });
+
     input.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -1113,6 +1331,8 @@
     window.addEventListener('nutri:lang-changed', renderFoodOptions);
 
     renderFoodOptions();
+    syncLockInputsFromStorage();
+    describeLockStatus();
     renderSelectedFoods();
   }
 
@@ -1262,13 +1482,18 @@
       const priority = String(payload.priority || 'balanced');
       const goals = String(payload.goals || '').trim();
       const text = normalizeText(`${restaurant} ${item} ${goals}`);
+      const lockSet = activeRestrictionSet();
+      const lockLabels = [...lockSet].map((key) => restrictionLabel(key));
 
       const isVegetarianRequest =
         diet === 'vegetarian' ||
         diet === 'vegan' ||
+        lockSet.has('vegetarian') ||
+        lockSet.has('vegan') ||
         containsAny(text, ['vegetarian', 'veggie', 'vegan', 'cauliflower', 'black bean', 'mushroom', 'falafel', 'plant']);
 
-      const isVegan = diet === 'vegan' || containsAny(text, ['vegan', 'dairy free', 'dairy-free']);
+      const isVegan = diet === 'vegan' || lockSet.has('vegan') || containsAny(text, ['vegan', 'dairy free', 'dairy-free']);
+      const isDairyFree = isVegan || lockSet.has('dairy_free') || containsAny(text, ['dairy free', 'dairy-free', 'lactose']);
       const isSpicy = containsAny(text, ['spicy', 'hot', 'nashville', 'buffalo', 'chili', 'jalapeno']);
       const wantsCrispy = containsAny(text, ['crispy', 'fried', 'crunchy', 'tender', 'nugget']);
       const isBurger = containsAny(text, ['burger', 'slider', 'sandwich']);
@@ -1284,16 +1509,24 @@
       } else if (containsAny(text, ['fish', 'salmon', 'shrimp'])) {
         protein = 'fish fillet (baked or air-fried)';
       }
+      if (lockSet.has('shellfish_free') && containsAny(protein, ['shrimp', 'prawn', 'crab', 'lobster'])) {
+        protein = 'chicken breast';
+      }
+      if (lockSet.has('gluten_free')) {
+        if (isBurger) {
+          protein = isVegetarianRequest ? protein : protein;
+        }
+      }
 
       const base = isBurger
-        ? choose(['whole wheat burger bun', 'whole grain brioche-style bun'], variant)
+        ? (lockSet.has('gluten_free') ? choose(['lettuce wrap stack', 'gluten-free bun'], variant) : choose(['whole wheat burger bun', 'whole grain brioche-style bun'], variant))
         : isWrap
-          ? 'high-fiber tortilla'
+          ? (lockSet.has('gluten_free') ? 'corn tortilla wrap' : 'high-fiber tortilla')
           : isTaco
             ? 'corn tortillas'
             : 'brown rice base';
 
-      const sauce = isVegan
+      const sauce = isDairyFree
         ? (isSpicy ? 'chili-lime tahini sauce' : 'lemon-herb tahini sauce')
         : (isSpicy ? 'Greek yogurt hot sauce' : 'Greek yogurt herb sauce');
 
@@ -1304,12 +1537,17 @@
       const groceries = [
         protein,
         base,
-        isVegan ? 'tahini' : 'plain Greek yogurt',
+        isDairyFree ? 'tahini' : 'plain Greek yogurt',
         isSpicy ? 'hot sauce or chili paste' : 'lemon + garlic',
         hasFries ? 'potatoes or sweet potatoes' : 'shredded cabbage',
         'paprika + garlic powder + black pepper',
         'lettuce, tomato, onion',
       ];
+      if (lockSet.has('nut_free')) {
+        const filtered = groceries.filter((item) => !normalizeText(item).includes('peanut'));
+        groceries.length = 0;
+        groceries.push(...filtered);
+      }
 
       const detailedSteps = [
         `Step 1: Prep your main item. Season ${protein} with paprika, garlic powder, black pepper, and a small amount of oil spray.`,
@@ -1348,6 +1586,11 @@
         whyBetter,
         keepVibe: `Still ${isSpicy ? 'spicy, ' : ''}${wantsCrispy ? 'crispy, ' : ''}and satisfying in the same format you asked for.`,
         nutritionEstimate,
+        lockLabels,
+        safetyNote:
+          lockSet.has('halal') || lockSet.has('kosher')
+            ? 'Halal/Kosher lock is active. Verify product labels and preparation standards before use.'
+            : '',
       };
     }
 
@@ -1379,6 +1622,8 @@
           <ul class="recipe-list">
             ${output.whyBetter.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}
           </ul>
+          ${output.lockLabels?.length ? `<div class="small-text" style="margin-top: 0.4rem;"><strong>Restriction lock:</strong> ${escapeHtml(output.lockLabels.join(', '))}</div>` : ''}
+          ${output.safetyNote ? `<div class="small-text" style="margin-top: 0.35rem;"><strong>Safety note:</strong> ${escapeHtml(output.safetyNote)}</div>` : ''}
           <div class="small-text" style="margin-top: 0.4rem;"><strong>Keep the vibe:</strong> ${escapeHtml(output.keepVibe)}</div>
           <div class="small-text" style="margin-top: 0.35rem;"><strong>Estimated nutrition:</strong> ${escapeHtml(output.nutritionEstimate.calories)} calories · ${escapeHtml(output.nutritionEstimate.protein)} protein · ${escapeHtml(output.nutritionEstimate.fat)} fat</div>
         </div>

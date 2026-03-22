@@ -166,7 +166,7 @@
         title: 'Child growth support',
         desc: 'Use Action Hub risk and urgency tools to triage child warning patterns quickly.',
         cta: 'Open Action Hub tools',
-        href: './learn.html?tool=risk#tool-risk-checker',
+        href: './learn.html?tool=escalation#tool-escalation',
       });
     }
 
@@ -243,6 +243,120 @@
     }
   }
 
+  const symptomLabelById = {
+    fatigue: t('symptom_fatigue'),
+    poor_appetite: t('symptom_poor_appetite'),
+    diarrhea: t('symptom_diarrhea'),
+    fever: t('symptom_fever'),
+    pallor: t('symptom_pallor'),
+    edema: t('symptom_edema'),
+    wasting: t('symptom_wasting'),
+    hair_loss: t('symptom_hair_loss'),
+    night_vision: t('symptom_night_vision'),
+    lethargy: t('symptom_lethargy'),
+  };
+
+  function selectedSymptomLabels() {
+    const selected = Array.isArray(report?.selectedSymptoms) ? report.selectedSymptoms : [];
+    if (!selected.length) return 'None reported';
+    return selected.map((id) => symptomLabelById[id] || id).join(', ');
+  }
+
+  function topDeficienciesText() {
+    const list = Array.isArray(report?.deficiencies) ? report.deficiencies.slice(0, 3) : [];
+    if (!list.length) return 'No deficiency signals detected in this quick model.';
+    return list.map((item) => `${nutrientLabel(item.name)} (${item.confidence}%)`).join(', ');
+  }
+
+  function topResourcesText() {
+    const list = Array.isArray(report?.resources) ? report.resources.slice(0, 2) : [];
+    if (!list.length) return 'No nearby resources listed.';
+    return list.map((item) => `${item.name} (${resourceTypeLabel(item.type)}, ${item.distanceKm || 'n/a'} km)`).join(' | ');
+  }
+
+  function buildAudienceSummary(audience) {
+    const header = [
+      'NutriPath Nutrition Action Summary',
+      `Date: ${NutriApp.formatDate(report.createdAt)}`,
+      `Household: ${report.payload.householdName}`,
+      `Community: ${report.payload.community}`,
+      `Risk level: ${riskLabel(category)} (${riskScore}/99)`,
+      `Follow-up due: ${report.followUpDue} day(s)`,
+      '',
+    ];
+
+    if (audience === 'clinic') {
+      return [
+        ...header,
+        'For Clinic / Health Team',
+        `Age: ${report.payload.ageYears} years | Sex: ${report.payload.sex}`,
+        `MUAC: ${report.payload.muac || 'Not provided'} cm`,
+        `Meals/day: ${report.payload.mealsPerDay} | Diet diversity: ${report.payload.dietDiversity}/10`,
+        `Reported signs: ${selectedSymptomLabels()}`,
+        `Likely deficiencies: ${topDeficienciesText()}`,
+        `Immediate actions: ${actionItems.join(' | ')}`,
+        `Referral guidance: ${report?.riskOutput?.referralGuidance || 'Use urgency escalation and clinical judgement.'}`,
+        `Nearby resources: ${topResourcesText()}`,
+        '',
+        'This summary is decision support and not a diagnosis.',
+      ].join('\n');
+    }
+
+    if (audience === 'ngo') {
+      return [
+        ...header,
+        'For NGO / Food Support Partner',
+        `Household size: ${report.payload.householdSize}`,
+        `Weekly food budget: $${report.payload.weeklyBudget}`,
+        `Primary needs: ${topDeficienciesText()}`,
+        `Meal focus: ${report?.riskOutput?.mealFocus || 'Increase protein + protective foods.'}`,
+        `Priority next actions: ${actionItems.join(' | ')}`,
+        `Closest verified resources: ${topResourcesText()}`,
+        '',
+        'Use this to triage support routing and follow-up scheduling.',
+      ].join('\n');
+    }
+
+    return [
+      ...header,
+      'For Caregiver / Family',
+      `What this means: ${report?.riskOutput?.referralGuidance || 'Watch appetite, energy, and meal intake.'}`,
+      `Start today: ${actionItems[0] || 'Improve meals now.'}`,
+      `Do next: ${actionItems[1] || 'Re-check symptoms in a few days.'}`,
+      `Meal focus: ${report?.riskOutput?.mealFocus || 'Protein + energy + one protective food.'}`,
+      `Where to get help: ${topResourcesText()}`,
+      '',
+      'Get help now if warning signs worsen.',
+    ].join('\n');
+  }
+
+  function renderPrintableSummary(text) {
+    const win = window.open('', '_blank', 'width=860,height=920');
+    if (!win) return false;
+    win.document.write(`
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <title>NutriPath Summary</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
+            h1 { margin: 0 0 12px; font-size: 20px; }
+            pre { white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.5; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <h1>NutriPath Summary</h1>
+          <pre>${text.replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]))}</pre>
+        </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 100);
+    return true;
+  }
+
   const speakButton = document.getElementById('speak-btn');
   if (speakButton) {
     speakButton.addEventListener('click', () => {
@@ -255,9 +369,46 @@
     });
   }
 
+  const summaryAudience = document.getElementById('summary-audience');
+  const shareButton = document.getElementById('share-btn');
+  const shareStatus = document.getElementById('share-status');
   const printButton = document.getElementById('print-btn');
   if (printButton) {
-    printButton.addEventListener('click', () => window.print());
+    printButton.addEventListener('click', () => {
+      const audience = summaryAudience?.value || 'caregiver';
+      const summaryText = buildAudienceSummary(audience);
+      const opened = renderPrintableSummary(summaryText);
+      if (!opened) window.print();
+    });
+  }
+
+  if (shareButton) {
+    shareButton.addEventListener('click', async () => {
+      const audience = summaryAudience?.value || 'caregiver';
+      const summaryText = buildAudienceSummary(audience);
+      const sharePayload = {
+        title: `NutriPath summary for ${audience}`,
+        text: summaryText,
+        url: window.location.href,
+      };
+
+      try {
+        if (navigator.share) {
+          await navigator.share(sharePayload);
+          if (shareStatus) shareStatus.textContent = 'Summary shared successfully.';
+          return;
+        }
+      } catch {
+        // Fall through to clipboard fallback.
+      }
+
+      try {
+        await navigator.clipboard.writeText(summaryText);
+        if (shareStatus) shareStatus.textContent = 'Summary copied to clipboard. You can paste it into text, email, or chat.';
+      } catch {
+        if (shareStatus) shareStatus.textContent = 'Sharing not available on this browser. Use Print summary instead.';
+      }
+    });
   }
 
   if (isAssessmentPage && showInlineResults && assessmentPanel) {

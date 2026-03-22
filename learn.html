@@ -87,6 +87,25 @@
  <article class="card tool-card tool-panel" id="tool-pantry-rescue" data-tool-tab="pantry">
  <h3>Pantry-to-Meal Rescue Tool</h3>
  <p class="small-text">Input what you have right now and get a practical meal rescue plan with quality feedback.</p>
+ <div class="restriction-lock" id="nutrition-lock-shell">
+ <p class="small-text"><strong>Allergy + Restriction Lock</strong> Keep meal outputs aligned to household needs.</p>
+ <div class="checkbox-grid" id="nutrition-lock-grid">
+ <label class="checkbox-item"><input type="checkbox" value="vegetarian" /> <span>Vegetarian</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="vegan" /> <span>Vegan</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="halal" /> <span>Halal</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="kosher" /> <span>Kosher</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="dairy_free" /> <span>Dairy-free</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="gluten_free" /> <span>Gluten-free</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="nut_free" /> <span>Nut-free</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="shellfish_free" /> <span>Shellfish-free</span></label>
+ <label class="checkbox-item"><input type="checkbox" value="egg_free" /> <span>Egg-free</span></label>
+ </div>
+ <div class="cta-row" style="margin-top: 0.6rem;">
+ <button id="nutrition-lock-apply" class="btn btn-secondary btn-small" type="button">Apply lock</button>
+ <button id="nutrition-lock-clear" class="btn btn-secondary btn-small" type="button">Clear lock</button>
+ </div>
+ <p id="nutrition-lock-status" class="small-text" style="margin: 0.45rem 0 0;">No active locks.</p>
+ </div>
  <div class="form-grid">
  <div class="field">
  <label for="hub-food-input">Add food you have now</label>
@@ -175,7 +194,7 @@
 
  <article class="card tool-card tool-panel" id="tool-claim-checker" data-tool-tab="claim">
  <h3>Nutrition Claim Checker</h3>
- <p class="small-text">Check a belief and get a practical correction with an immediate action.</p>
+ <p class="small-text">Check a belief and get likely myth / mixed / likely fact + confidence and safer next action.</p>
  <div class="field">
  <label for="myth-input">Enter nutrition claim</label>
  <input id="myth-input" placeholder="Example: Healthy food is too expensive" />
