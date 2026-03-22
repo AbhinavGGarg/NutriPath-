@@ -1687,12 +1687,36 @@
       'Why do mushrooms get invited to dinner? They are fun-gi.',
       'What did the lettuce say to the celery? Stop stalking me.',
     ];
-    let localSeed = 0;
+    let localTriviaSeed = 0;
+    let localJokeSeed = 0;
 
-    function pickLocal(list) {
-      const item = list[localSeed % list.length];
-      localSeed += 1;
+    function pickLocal(list, seedType) {
+      const seed = seedType === 'joke' ? localJokeSeed : localTriviaSeed;
+      const item = list[seed % list.length];
+      if (seedType === 'joke') {
+        localJokeSeed += 1;
+      } else {
+        localTriviaSeed += 1;
+      }
       return item;
+    }
+
+    function normalizeLine(text) {
+      return String(text || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+    }
+
+    function looksLikeJoke(text) {
+      const normalized = normalizeLine(text);
+      if (!normalized) return false;
+      return (
+        normalized.startsWith('why did') ||
+        normalized.startsWith('what did') ||
+        normalized.includes('joke') ||
+        normalized.includes('haha')
+      );
     }
 
     async function spoonFetch(path) {
@@ -1729,19 +1753,26 @@
 
     async function loadTriviaAndJoke() {
       refreshButton.disabled = true;
-      triviaNode.textContent = 'Loading a quick food fact...';
-      jokeNode.textContent = 'Loading a quick food joke...';
+      triviaNode.textContent = 'Trivia: loading a quick food fact...';
+      jokeNode.textContent = 'Joke: loading a quick food joke...';
 
       const [triviaResult, jokeResult] = await Promise.allSettled([
         spoonFetch('/food/trivia/random'),
         spoonFetch('/food/jokes/random'),
       ]);
 
-      const triviaText = triviaResult.status === 'fulfilled' ? String(triviaResult.value?.text || '').trim() : '';
-      const jokeText = jokeResult.status === 'fulfilled' ? String(jokeResult.value?.text || '').trim() : '';
+      let triviaText = triviaResult.status === 'fulfilled' ? String(triviaResult.value?.text || '').trim() : '';
+      let jokeText = jokeResult.status === 'fulfilled' ? String(jokeResult.value?.text || '').trim() : '';
 
-      triviaNode.textContent = triviaText || pickLocal(localTrivia);
-      jokeNode.textContent = jokeText || pickLocal(localJokes);
+      if (!triviaText || normalizeLine(triviaText) === normalizeLine(jokeText) || looksLikeJoke(triviaText)) {
+        triviaText = pickLocal(localTrivia, 'trivia');
+      }
+      if (!jokeText) {
+        jokeText = pickLocal(localJokes, 'joke');
+      }
+
+      triviaNode.textContent = `Trivia: ${triviaText}`;
+      jokeNode.textContent = `Joke: ${jokeText}`;
       refreshButton.disabled = false;
     }
 
