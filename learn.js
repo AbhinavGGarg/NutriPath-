@@ -1666,6 +1666,89 @@
     });
   }
 
+  function initHomeTriviaWidget() {
+    const widget = document.getElementById('home-trivia-widget');
+    const triviaNode = document.getElementById('home-trivia-text');
+    const jokeNode = document.getElementById('home-joke-text');
+    const refreshButton = document.getElementById('home-trivia-refresh');
+    if (!widget || !triviaNode || !jokeNode || !refreshButton) return;
+
+    const localTrivia = [
+      'Carrots were first grown in purple and yellow before orange became common.',
+      'Potatoes have more potassium per serving than bananas.',
+      'Lentils can cook in under 20 minutes and are a low-cost protein option.',
+      'Frozen vegetables can keep nutrients well and reduce food waste at home.',
+      'Beans + grains together make a strong protein base for many households.',
+    ];
+    const localJokes = [
+      'Why did the tomato blush? It saw the salad dressing.',
+      'Why did the banana go to the doctor? It was not peeling well.',
+      'What did one plate say to the other? Dinner is on me.',
+      'Why do mushrooms get invited to dinner? They are fun-gi.',
+      'What did the lettuce say to the celery? Stop stalking me.',
+    ];
+    let localSeed = 0;
+
+    function pickLocal(list) {
+      const item = list[localSeed % list.length];
+      localSeed += 1;
+      return item;
+    }
+
+    async function spoonFetch(path) {
+      try {
+        const proxyResponse = await fetch(SPOONACULAR_PROXY_PATH, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path,
+            method: 'GET',
+            params: {},
+            form: null,
+          }),
+        });
+        const proxyPayload = await proxyResponse.json().catch(() => null);
+        if (!proxyResponse.ok) {
+          throw new Error(proxyPayload?.error || proxyPayload?.message || `Request failed (${proxyResponse.status})`);
+        }
+        return proxyPayload;
+      } catch {
+        if (!INTEGRATION_KEYS.recipeApiKey) return null;
+      }
+
+      try {
+        const url = new URL(`${SPOONACULAR_API_BASE}${path}`);
+        url.searchParams.set('apiKey', INTEGRATION_KEYS.recipeApiKey);
+        const response = await fetch(url.toString(), { method: 'GET' });
+        if (!response.ok) return null;
+        return response.json();
+      } catch {
+        return null;
+      }
+    }
+
+    async function loadTriviaAndJoke() {
+      refreshButton.disabled = true;
+      triviaNode.textContent = 'Loading a quick food fact...';
+      jokeNode.textContent = 'Loading a quick food joke...';
+
+      const [triviaResult, jokeResult] = await Promise.allSettled([
+        spoonFetch('/food/trivia/random'),
+        spoonFetch('/food/jokes/random'),
+      ]);
+
+      const triviaText = triviaResult.status === 'fulfilled' ? String(triviaResult.value?.text || '').trim() : '';
+      const jokeText = jokeResult.status === 'fulfilled' ? String(jokeResult.value?.text || '').trim() : '';
+
+      triviaNode.textContent = triviaText || pickLocal(localTrivia);
+      jokeNode.textContent = jokeText || pickLocal(localJokes);
+      refreshButton.disabled = false;
+    }
+
+    refreshButton.addEventListener('click', loadTriviaAndJoke);
+    loadTriviaAndJoke();
+  }
+
   const voice = buildVoiceSupport();
   const engine = buildNextStepEngine();
 
@@ -1691,4 +1774,5 @@
   initEscalationTool(engine, voice);
   initClaimChecker(engine, voice);
   initRecipeWidget(engine, voice);
+  initHomeTriviaWidget();
 })();

@@ -262,6 +262,32 @@ main.container {
   margin: 0;
 }
 
+.hero-inline-widget {
+  width: min(360px, 100%);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(124, 234, 211, 0.2);
+  background: linear-gradient(150deg, rgba(12, 22, 35, 0.96) 0%, rgba(11, 18, 30, 0.98) 100%);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.hero-inline-widget h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.hero-inline-widget p {
+  margin: 0;
+  color: #b9ccdd;
+  font-size: 0.86rem;
+}
+
+.hero-inline-widget .btn {
+  justify-self: start;
+}
+
 .hero h1 {
   margin: 0;
   line-height: 1.06;

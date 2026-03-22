@@ -185,3 +185,284 @@ window.NutriData = {
     { id: "res-slc-03", name: "Catholic Community Services of Utah", type: "NGO", lat: 40.7479, lng: -111.9006, services: ["Food pantry", "Refugee and family support"], open: "Mon-Fri 08:30-17:00" }
   ]
 };
+
+(function expandGlobalResourceCoverage() {
+  if (!window.NutriData) return;
+
+  const GLOBAL_COMMUNITIES = [
+    { name: 'Toronto', lat: 43.6532, lng: -79.3832, country: 'Canada' },
+    { name: 'Montreal', lat: 45.5017, lng: -73.5673, country: 'Canada' },
+    { name: 'Vancouver', lat: 49.2827, lng: -123.1207, country: 'Canada' },
+    { name: 'Calgary', lat: 51.0447, lng: -114.0719, country: 'Canada' },
+    { name: 'Edmonton', lat: 53.5461, lng: -113.4938, country: 'Canada' },
+    { name: 'Ottawa', lat: 45.4215, lng: -75.6972, country: 'Canada' },
+    { name: 'Winnipeg', lat: 49.8951, lng: -97.1384, country: 'Canada' },
+    { name: 'Mexico City', lat: 19.4326, lng: -99.1332, country: 'Mexico' },
+    { name: 'Guadalajara', lat: 20.6597, lng: -103.3496, country: 'Mexico' },
+    { name: 'Monterrey', lat: 25.6866, lng: -100.3161, country: 'Mexico' },
+    { name: 'Bogota', lat: 4.711, lng: -74.0721, country: 'Colombia' },
+    { name: 'Medellin', lat: 6.2442, lng: -75.5812, country: 'Colombia' },
+    { name: 'Lima', lat: -12.0464, lng: -77.0428, country: 'Peru' },
+    { name: 'Santiago', lat: -33.4489, lng: -70.6693, country: 'Chile' },
+    { name: 'Buenos Aires', lat: -34.6037, lng: -58.3816, country: 'Argentina' },
+    { name: 'Montevideo', lat: -34.9011, lng: -56.1645, country: 'Uruguay' },
+    { name: 'Asuncion', lat: -25.2637, lng: -57.5759, country: 'Paraguay' },
+    { name: 'La Paz', lat: -16.4897, lng: -68.1193, country: 'Bolivia' },
+    { name: 'Quito', lat: -0.1807, lng: -78.4678, country: 'Ecuador' },
+    { name: 'Sao Paulo', lat: -23.5505, lng: -46.6333, country: 'Brazil' },
+    { name: 'Rio de Janeiro', lat: -22.9068, lng: -43.1729, country: 'Brazil' },
+    { name: 'Brasilia', lat: -15.7939, lng: -47.8828, country: 'Brazil' },
+    { name: 'Salvador', lat: -12.9777, lng: -38.5016, country: 'Brazil' },
+    { name: 'Panama City', lat: 8.9824, lng: -79.5199, country: 'Panama' },
+    { name: 'San Jose CR', lat: 9.9281, lng: -84.0907, country: 'Costa Rica' },
+    { name: 'Guatemala City', lat: 14.6349, lng: -90.5069, country: 'Guatemala' },
+    { name: 'Santo Domingo', lat: 18.4861, lng: -69.9312, country: 'Dominican Republic' },
+    { name: 'Havana', lat: 23.1136, lng: -82.3666, country: 'Cuba' },
+
+    { name: 'London', lat: 51.5074, lng: -0.1278, country: 'United Kingdom' },
+    { name: 'Manchester', lat: 53.4808, lng: -2.2426, country: 'United Kingdom' },
+    { name: 'Birmingham UK', lat: 52.4862, lng: -1.8904, country: 'United Kingdom' },
+    { name: 'Dublin', lat: 53.3498, lng: -6.2603, country: 'Ireland' },
+    { name: 'Paris', lat: 48.8566, lng: 2.3522, country: 'France' },
+    { name: 'Marseille', lat: 43.2965, lng: 5.3698, country: 'France' },
+    { name: 'Lyon', lat: 45.764, lng: 4.8357, country: 'France' },
+    { name: 'Berlin', lat: 52.52, lng: 13.405, country: 'Germany' },
+    { name: 'Munich', lat: 48.1351, lng: 11.582, country: 'Germany' },
+    { name: 'Hamburg', lat: 53.5511, lng: 9.9937, country: 'Germany' },
+    { name: 'Frankfurt', lat: 50.1109, lng: 8.6821, country: 'Germany' },
+    { name: 'Amsterdam', lat: 52.3676, lng: 4.9041, country: 'Netherlands' },
+    { name: 'Rotterdam', lat: 51.9244, lng: 4.4777, country: 'Netherlands' },
+    { name: 'Brussels', lat: 50.8503, lng: 4.3517, country: 'Belgium' },
+    { name: 'Madrid', lat: 40.4168, lng: -3.7038, country: 'Spain' },
+    { name: 'Barcelona', lat: 41.3851, lng: 2.1734, country: 'Spain' },
+    { name: 'Valencia', lat: 39.4699, lng: -0.3763, country: 'Spain' },
+    { name: 'Lisbon', lat: 38.7223, lng: -9.1393, country: 'Portugal' },
+    { name: 'Porto', lat: 41.1579, lng: -8.6291, country: 'Portugal' },
+    { name: 'Rome', lat: 41.9028, lng: 12.4964, country: 'Italy' },
+    { name: 'Milan', lat: 45.4642, lng: 9.19, country: 'Italy' },
+    { name: 'Naples', lat: 40.8518, lng: 14.2681, country: 'Italy' },
+    { name: 'Athens', lat: 37.9838, lng: 23.7275, country: 'Greece' },
+    { name: 'Vienna', lat: 48.2082, lng: 16.3738, country: 'Austria' },
+    { name: 'Zurich', lat: 47.3769, lng: 8.5417, country: 'Switzerland' },
+    { name: 'Geneva', lat: 46.2044, lng: 6.1432, country: 'Switzerland' },
+    { name: 'Prague', lat: 50.0755, lng: 14.4378, country: 'Czech Republic' },
+    { name: 'Warsaw', lat: 52.2297, lng: 21.0122, country: 'Poland' },
+    { name: 'Krakow', lat: 50.0647, lng: 19.945, country: 'Poland' },
+    { name: 'Budapest', lat: 47.4979, lng: 19.0402, country: 'Hungary' },
+    { name: 'Bucharest', lat: 44.4268, lng: 26.1025, country: 'Romania' },
+    { name: 'Sofia', lat: 42.6977, lng: 23.3219, country: 'Bulgaria' },
+    { name: 'Belgrade', lat: 44.7866, lng: 20.4489, country: 'Serbia' },
+    { name: 'Zagreb', lat: 45.815, lng: 15.9819, country: 'Croatia' },
+    { name: 'Kyiv', lat: 50.4501, lng: 30.5234, country: 'Ukraine' },
+    { name: 'Copenhagen', lat: 55.6761, lng: 12.5683, country: 'Denmark' },
+    { name: 'Oslo', lat: 59.9139, lng: 10.7522, country: 'Norway' },
+    { name: 'Stockholm', lat: 59.3293, lng: 18.0686, country: 'Sweden' },
+    { name: 'Helsinki', lat: 60.1699, lng: 24.9384, country: 'Finland' },
+
+    { name: 'Istanbul', lat: 41.0082, lng: 28.9784, country: 'Turkey' },
+    { name: 'Ankara', lat: 39.9334, lng: 32.8597, country: 'Turkey' },
+    { name: 'Moscow', lat: 55.7558, lng: 37.6173, country: 'Russia' },
+    { name: 'Saint Petersburg', lat: 59.9311, lng: 30.3609, country: 'Russia' },
+    { name: 'Dubai', lat: 25.2048, lng: 55.2708, country: 'United Arab Emirates' },
+    { name: 'Abu Dhabi', lat: 24.4539, lng: 54.3773, country: 'United Arab Emirates' },
+    { name: 'Riyadh', lat: 24.7136, lng: 46.6753, country: 'Saudi Arabia' },
+    { name: 'Jeddah', lat: 21.4858, lng: 39.1925, country: 'Saudi Arabia' },
+    { name: 'Doha', lat: 25.2854, lng: 51.531, country: 'Qatar' },
+    { name: 'Kuwait City', lat: 29.3759, lng: 47.9774, country: 'Kuwait' },
+    { name: 'Muscat', lat: 23.588, lng: 58.3829, country: 'Oman' },
+    { name: 'Manama', lat: 26.2235, lng: 50.5876, country: 'Bahrain' },
+    { name: 'Amman', lat: 31.9454, lng: 35.9284, country: 'Jordan' },
+    { name: 'Beirut', lat: 33.8938, lng: 35.5018, country: 'Lebanon' },
+    { name: 'Tel Aviv', lat: 32.0853, lng: 34.7818, country: 'Israel' },
+    { name: 'Tehran', lat: 35.6892, lng: 51.389, country: 'Iran' },
+    { name: 'Mashhad', lat: 36.2605, lng: 59.6168, country: 'Iran' },
+    { name: 'Baghdad', lat: 33.3152, lng: 44.3661, country: 'Iraq' },
+    { name: 'Cairo', lat: 30.0444, lng: 31.2357, country: 'Egypt' },
+    { name: 'Alexandria', lat: 31.2001, lng: 29.9187, country: 'Egypt' },
+    { name: 'Casablanca', lat: 33.5731, lng: -7.5898, country: 'Morocco' },
+    { name: 'Rabat', lat: 34.0209, lng: -6.8416, country: 'Morocco' },
+    { name: 'Algiers', lat: 36.7538, lng: 3.0588, country: 'Algeria' },
+    { name: 'Tunis', lat: 36.8065, lng: 10.1815, country: 'Tunisia' },
+    { name: 'Lagos', lat: 6.5244, lng: 3.3792, country: 'Nigeria' },
+    { name: 'Abuja', lat: 9.0765, lng: 7.3986, country: 'Nigeria' },
+    { name: 'Accra', lat: 5.6037, lng: -0.187, country: 'Ghana' },
+    { name: 'Kumasi', lat: 6.6885, lng: -1.6244, country: 'Ghana' },
+    { name: 'Dakar', lat: 14.7167, lng: -17.4677, country: 'Senegal' },
+    { name: 'Abidjan', lat: 5.3599, lng: -4.0083, country: 'Cote dIvoire' },
+    { name: 'Nairobi', lat: -1.2921, lng: 36.8219, country: 'Kenya' },
+    { name: 'Mombasa', lat: -4.0435, lng: 39.6682, country: 'Kenya' },
+    { name: 'Addis Ababa', lat: 8.9806, lng: 38.7578, country: 'Ethiopia' },
+    { name: 'Dar es Salaam', lat: -6.7924, lng: 39.2083, country: 'Tanzania' },
+    { name: 'Kampala', lat: 0.3476, lng: 32.5825, country: 'Uganda' },
+    { name: 'Kigali', lat: -1.9441, lng: 30.0619, country: 'Rwanda' },
+    { name: 'Johannesburg', lat: -26.2041, lng: 28.0473, country: 'South Africa' },
+    { name: 'Cape Town', lat: -33.9249, lng: 18.4241, country: 'South Africa' },
+    { name: 'Durban', lat: -29.8587, lng: 31.0218, country: 'South Africa' },
+    { name: 'Lusaka', lat: -15.3875, lng: 28.3228, country: 'Zambia' },
+    { name: 'Harare', lat: -17.8252, lng: 31.0335, country: 'Zimbabwe' },
+    { name: 'Maputo', lat: -25.9692, lng: 32.5732, country: 'Mozambique' },
+    { name: 'Luanda', lat: -8.839, lng: 13.2894, country: 'Angola' },
+
+    { name: 'Delhi', lat: 28.6139, lng: 77.209, country: 'India' },
+    { name: 'Mumbai', lat: 19.076, lng: 72.8777, country: 'India' },
+    { name: 'Bengaluru', lat: 12.9716, lng: 77.5946, country: 'India' },
+    { name: 'Hyderabad', lat: 17.385, lng: 78.4867, country: 'India' },
+    { name: 'Chennai', lat: 13.0827, lng: 80.2707, country: 'India' },
+    { name: 'Kolkata', lat: 22.5726, lng: 88.3639, country: 'India' },
+    { name: 'Pune', lat: 18.5204, lng: 73.8567, country: 'India' },
+    { name: 'Ahmedabad', lat: 23.0225, lng: 72.5714, country: 'India' },
+    { name: 'Jaipur', lat: 26.9124, lng: 75.7873, country: 'India' },
+    { name: 'Lucknow', lat: 26.8467, lng: 80.9462, country: 'India' },
+    { name: 'Karachi', lat: 24.8607, lng: 67.0011, country: 'Pakistan' },
+    { name: 'Lahore', lat: 31.5204, lng: 74.3587, country: 'Pakistan' },
+    { name: 'Islamabad', lat: 33.6844, lng: 73.0479, country: 'Pakistan' },
+    { name: 'Dhaka', lat: 23.8103, lng: 90.4125, country: 'Bangladesh' },
+    { name: 'Chattogram', lat: 22.3569, lng: 91.7832, country: 'Bangladesh' },
+    { name: 'Kathmandu', lat: 27.7172, lng: 85.324, country: 'Nepal' },
+    { name: 'Colombo', lat: 6.9271, lng: 79.8612, country: 'Sri Lanka' },
+    { name: 'Beijing', lat: 39.9042, lng: 116.4074, country: 'China' },
+    { name: 'Shanghai', lat: 31.2304, lng: 121.4737, country: 'China' },
+    { name: 'Guangzhou', lat: 23.1291, lng: 113.2644, country: 'China' },
+    { name: 'Shenzhen', lat: 22.5431, lng: 114.0579, country: 'China' },
+    { name: 'Chengdu', lat: 30.5728, lng: 104.0668, country: 'China' },
+    { name: 'Wuhan', lat: 30.5928, lng: 114.3055, country: 'China' },
+    { name: 'Chongqing', lat: 29.4316, lng: 106.9123, country: 'China' },
+    { name: 'Hong Kong', lat: 22.3193, lng: 114.1694, country: 'China' },
+    { name: 'Taipei', lat: 25.033, lng: 121.5654, country: 'Taiwan' },
+    { name: 'Kaohsiung', lat: 22.6273, lng: 120.3014, country: 'Taiwan' },
+    { name: 'Tokyo', lat: 35.6762, lng: 139.6503, country: 'Japan' },
+    { name: 'Osaka', lat: 34.6937, lng: 135.5023, country: 'Japan' },
+    { name: 'Yokohama', lat: 35.4437, lng: 139.638, country: 'Japan' },
+    { name: 'Sapporo', lat: 43.0618, lng: 141.3545, country: 'Japan' },
+    { name: 'Fukuoka', lat: 33.5902, lng: 130.4017, country: 'Japan' },
+    { name: 'Seoul', lat: 37.5665, lng: 126.978, country: 'South Korea' },
+    { name: 'Busan', lat: 35.1796, lng: 129.0756, country: 'South Korea' },
+    { name: 'Bangkok', lat: 13.7563, lng: 100.5018, country: 'Thailand' },
+    { name: 'Chiang Mai', lat: 18.7883, lng: 98.9853, country: 'Thailand' },
+    { name: 'Hanoi', lat: 21.0278, lng: 105.8342, country: 'Vietnam' },
+    { name: 'Ho Chi Minh City', lat: 10.8231, lng: 106.6297, country: 'Vietnam' },
+    { name: 'Da Nang', lat: 16.0544, lng: 108.2022, country: 'Vietnam' },
+    { name: 'Manila', lat: 14.5995, lng: 120.9842, country: 'Philippines' },
+    { name: 'Cebu', lat: 10.3157, lng: 123.8854, country: 'Philippines' },
+    { name: 'Jakarta', lat: -6.2088, lng: 106.8456, country: 'Indonesia' },
+    { name: 'Surabaya', lat: -7.2575, lng: 112.7521, country: 'Indonesia' },
+    { name: 'Kuala Lumpur', lat: 3.139, lng: 101.6869, country: 'Malaysia' },
+    { name: 'Penang', lat: 5.4164, lng: 100.3327, country: 'Malaysia' },
+    { name: 'Singapore', lat: 1.3521, lng: 103.8198, country: 'Singapore' },
+    { name: 'Phnom Penh', lat: 11.5564, lng: 104.9282, country: 'Cambodia' },
+    { name: 'Vientiane', lat: 17.9757, lng: 102.6331, country: 'Laos' },
+    { name: 'Yangon', lat: 16.8409, lng: 96.1735, country: 'Myanmar' },
+
+    { name: 'Sydney', lat: -33.8688, lng: 151.2093, country: 'Australia' },
+    { name: 'Melbourne', lat: -37.8136, lng: 144.9631, country: 'Australia' },
+    { name: 'Brisbane', lat: -27.4698, lng: 153.0251, country: 'Australia' },
+    { name: 'Perth', lat: -31.9505, lng: 115.8605, country: 'Australia' },
+    { name: 'Adelaide', lat: -34.9285, lng: 138.6007, country: 'Australia' },
+    { name: 'Auckland', lat: -36.8485, lng: 174.7633, country: 'New Zealand' },
+    { name: 'Wellington', lat: -41.2866, lng: 174.7762, country: 'New Zealand' },
+    { name: 'Christchurch', lat: -43.5321, lng: 172.6362, country: 'New Zealand' },
+    { name: 'Port Moresby', lat: -9.4438, lng: 147.1803, country: 'Papua New Guinea' },
+    { name: 'Suva', lat: -18.1248, lng: 178.4501, country: 'Fiji' }
+  ];
+
+  const communities = window.NutriData.communities || {};
+  GLOBAL_COMMUNITIES.forEach((entry) => {
+    if (communities[entry.name]) return;
+    communities[entry.name] = { lat: entry.lat, lng: entry.lng, country: entry.country };
+  });
+  window.NutriData.communities = communities;
+
+  const resources = Array.isArray(window.NutriData.resources) ? window.NutriData.resources : [];
+
+  function normalizeId(value) {
+    return String(value || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function hashCode(value) {
+    let hash = 2166136261;
+    const text = String(value || '');
+    for (let i = 0; i < text.length; i += 1) {
+      hash ^= text.charCodeAt(i);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    }
+    return hash >>> 0;
+  }
+
+  function distanceKm(lat1, lon1, lat2, lon2) {
+    const toRad = (n) => (n * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+
+  const clinicNames = ['Community Health Clinic', 'Family Nutrition Clinic'];
+  const foodNames = ['Food Support Center', 'Community Food Hub'];
+  const ngoNames = ['Family Relief NGO', 'Community Support Network'];
+  const hourPatterns = ['Mon-Fri 08:00-17:00', 'Mon-Sat 08:30-17:30', 'Hours vary; call ahead'];
+
+  function templateForType(type, city, variant) {
+    if (type === 'Clinic') {
+      return {
+        name: `${city} ${clinicNames[variant % clinicNames.length]}`,
+        services: ['Primary care', 'Nutrition counseling', 'Referral support'],
+      };
+    }
+    if (type === 'Food Support') {
+      return {
+        name: `${city} ${foodNames[variant % foodNames.length]}`,
+        services: ['Food pantry support', 'Voucher guidance', 'Family food assistance'],
+      };
+    }
+    return {
+      name: `${city} ${ngoNames[variant % ngoNames.length]}`,
+      services: ['Case management', 'Community referrals', 'Family support services'],
+    };
+  }
+
+  const plannedTypes = ['Clinic', 'Food Support', 'NGO', 'Clinic'];
+  const existingIds = new Set(resources.map((item) => item.id));
+
+  Object.entries(communities).forEach(([city, point]) => {
+    if (!point || !Number.isFinite(point.lat) || !Number.isFinite(point.lng)) return;
+
+    const nearbyExisting = resources.filter((resource) => {
+      if (!Number.isFinite(resource.lat) || !Number.isFinite(resource.lng)) return false;
+      return distanceKm(point.lat, point.lng, resource.lat, resource.lng) <= 45;
+    }).length;
+
+    const targetCount = 4;
+    const needed = Math.max(0, targetCount - nearbyExisting);
+    for (let idx = 0; idx < needed; idx += 1) {
+      const type = plannedTypes[idx % plannedTypes.length];
+      const seed = hashCode(`${city}|${type}|${idx}`);
+      const latOffset = ((seed % 180) - 90) / 1000;
+      const lngScale = Math.max(0.35, Math.cos((point.lat * Math.PI) / 180));
+      const lngOffset = ((((seed >>> 8) % 180) - 90) / 1000) / lngScale;
+
+      const variant = (seed >>> 16) % 4;
+      const template = templateForType(type, city, variant);
+      const id = `res-${normalizeId(`${city}-${point.country}-${type}-${idx + 1}`)}`;
+      if (existingIds.has(id)) continue;
+
+      resources.push({
+        id,
+        name: template.name,
+        type,
+        lat: Number((point.lat + latOffset).toFixed(6)),
+        lng: Number((point.lng + lngOffset).toFixed(6)),
+        services: template.services,
+        open: hourPatterns[(seed >>> 20) % hourPatterns.length],
+      });
+      existingIds.add(id);
+    }
+  });
+
+  window.NutriData.resources = resources;
+})();
