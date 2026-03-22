@@ -119,7 +119,6 @@
  <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=classify#recipe-widget" data-tab="classify">Cuisine Classifier</a>
  <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=mealplan#recipe-widget" data-tab="mealplan">Meal Plan + Shopping</a>
  <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=chat#recipe-widget" data-tab="chat">Recipe Helper</a>
- <a class="tool-tab-btn" href="./meal-builder.html?recipeTool=remix#recipe-widget" data-tab="remix">Fast Food Remix</a>
  </aside>
 
  <div class="tool-tabs-panels">
@@ -193,50 +192,6 @@
  </div>
  <div class="cta-row"><button id="recipe-chat-btn" class="btn btn-primary btn-small" type="button">Ask helper</button></div>
  <div id="recipe-chat-result" class="recipe-result"></div>
- </article>
-
- <article class="card recipe-tool tool-panel" data-tool-tab="remix">
- <h4>Fast Food Remix</h4>
- <p class="small-text">
- Answer these quick questions to get a healthier remake that keeps the same craving.
- </p>
- <div class="form-grid">
- <div class="field">
- <label for="recipe-remix-restaurant">1) Which fast food place?</label>
- <input id="recipe-remix-restaurant" placeholder="e.g., Dave's Hot Chicken, McDonald's, local burger spot" />
- </div>
- <div class="field">
- <label for="recipe-remix-item">2) Which exact item are you craving?</label>
- <input id="recipe-remix-item" placeholder="e.g., spicy slider, cauliflower burger, chicken wrap" />
- </div>
- <div class="field">
- <label for="recipe-remix-diet">3) Any diet preference?</label>
- <select id="recipe-remix-diet">
- <option value="none">No preference</option>
- <option value="vegetarian">Vegetarian</option>
- <option value="vegan">Vegan</option>
- </select>
- </div>
- <div class="field">
- <label for="recipe-remix-priority">4) What matters most?</label>
- <select id="recipe-remix-priority">
- <option value="balanced">Balanced taste + health</option>
- <option value="taste">Taste first</option>
- <option value="health">Health first</option>
- </select>
- </div>
- <div class="field">
- <label for="recipe-remix-goals">5) Any goals?</label>
- <input id="recipe-remix-goals" placeholder="e.g., lower calories, high protein, less oil" />
- </div>
- <div class="field" style="align-content: end;">
- <div class="cta-row">
- <button id="recipe-remix-generate" class="btn btn-primary btn-small" type="button">Generate Fast Food Remix</button>
- <button id="recipe-remix-reset" class="btn btn-secondary btn-small" type="button">Reset</button>
- </div>
- </div>
- </div>
- <div id="recipe-remix-result" class="recipe-result"></div>
  </article>
  </div>
  </div>

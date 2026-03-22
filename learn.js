@@ -1830,7 +1830,7 @@
         if (normalized.includes('budget') || normalized.includes('cheap') || normalized.includes('afford')) {
           chatResult.innerHTML = '<p>Use Budget Planner in Action Hub to rank low-cost nutrition foods first, then run nutrition search for recipes.</p>';
         } else if (normalized.includes('fast food') || normalized.includes('burger') || normalized.includes('wrap')) {
-          chatResult.innerHTML = '<p>Use Fast Food Remix tab to get a healthier remake with step-by-step instructions.</p>';
+          chatResult.innerHTML = '<p>Use Fast Food Remix on the homepage to get a healthier remake with step-by-step instructions.</p>';
         } else {
           const data = await spoonFetch('/recipes/complexSearch', {
             params: {
@@ -1856,7 +1856,7 @@
           'Provided recipe direction based on user question and available API tools.',
           [
             { title: 'Run nutrition search', desc: 'Find recipe options that fit your nutrient target.', cta: 'Nutrition Search', href: './meal-builder.html?recipeTool=nutrition#recipe-widget' },
-            { title: 'Use Fast Food Remix', desc: 'Generate healthier versions of specific fast-food cravings.', cta: 'Open Fast Food Remix', href: './meal-builder.html?recipeTool=remix#recipe-widget' },
+            { title: 'Use Fast Food Remix', desc: 'Generate healthier versions of specific fast-food cravings on the homepage.', cta: 'Open Fast Food Remix', href: './index.html#recipe-tools-shell' },
           ],
           'Recipe helper responded. Review suggested next actions and related tools.',
         );
@@ -1890,7 +1890,7 @@
         'Fast Food Remix',
         `Generated a healthier remake for ${payload.item} from ${payload.restaurant}.`,
         [
-          { title: 'Try this remix tonight', desc: 'Follow the step-by-step plan and compare taste.', cta: 'Use this plan', href: './meal-builder.html?recipeTool=remix#recipe-widget' },
+          { title: 'Try this remix tonight', desc: 'Follow the step-by-step plan and compare taste.', cta: 'Use this plan', href: './index.html#recipe-tools-shell' },
           { title: 'Adjust calories and protein next', desc: 'Use nutrition search for additional options.', cta: 'Open Nutrition Search', href: './meal-builder.html?recipeTool=nutrition#recipe-widget' },
           { title: 'Use budget planning if needed', desc: 'Lower cost while keeping nutrition quality.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
         ],
