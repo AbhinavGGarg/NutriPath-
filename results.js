@@ -91,7 +91,40 @@
       ? report.riskOutput.actionKeys
       : fallbackActionKeysByCategory[category] || [];
 
-  const actionItems = actionKeys.length ? actionKeys.map((key) => t(key)) : report.riskOutput.actions || [];
+  const baseActionItems = actionKeys.length ? actionKeys.map((key) => t(key)) : report.riskOutput.actions || [];
+
+  function buildContextActionItems() {
+    const items = [];
+    const mealsPerDay = Number(report?.payload?.mealsPerDay || 0);
+    const dietDiversity = Number(report?.payload?.dietDiversity || 0);
+    const perCapitaBudget = Number(report?.payload?.weeklyBudget || 0) / Math.max(1, Number(report?.payload?.householdSize || 1));
+    const selected = Array.isArray(report?.selectedSymptoms) ? report.selectedSymptoms : [];
+    const highWarning = selected.includes('edema') || selected.includes('wasting') || selected.includes('lethargy');
+
+    if (mealsPerDay > 0 && mealsPerDay <= 3) {
+      items.push('Add one extra small protein meal or snack today.');
+    }
+    if (dietDiversity > 0 && dietDiversity <= 5) {
+      items.push('Add one protective food today (greens, beans, fruit, or vegetables).');
+    }
+    if (report?.payload?.waterSource === 'unsafe') {
+      items.push('Use safe/treated water for drinking and meal prep.');
+    }
+    if (perCapitaBudget > 0 && perCapitaBudget < 3.5) {
+      items.push('Prioritize low-cost protein first, then add one iron-support food.');
+    }
+    if (highWarning && !['High', 'Urgent'].includes(category)) {
+      items.push('Re-check warning signs in 48 hours and escalate if symptoms persist.');
+    }
+
+    return items;
+  }
+
+  const actionItems = [...baseActionItems, ...buildContextActionItems()]
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
+    .filter((item, index, list) => list.indexOf(item) === index)
+    .slice(0, 5);
 
   const actionsList = document.getElementById('actions-list');
   actionItems.forEach((action) => {
@@ -99,6 +132,31 @@
     li.textContent = action;
     actionsList.appendChild(li);
   });
+
+  const actionPlanStrip = document.getElementById('action-plan-strip');
+  if (actionPlanStrip) {
+    const todayLine = actionItems[0] || report?.riskOutput?.mealFocus || 'Improve the next meal now with protein + protective food.';
+    const weekLine = actionItems[1] || report?.riskOutput?.referralGuidance || 'Use Action Hub tools this week to stabilize meals.';
+    const escalateLine =
+      ['High', 'Urgent'].includes(category)
+        ? 'Get help now if symptoms worsen, appetite drops further, or intake becomes very low.'
+        : 'Get help now if swelling, confusion, persistent weight loss, or severe fatigue appears.';
+
+    actionPlanStrip.innerHTML = `
+      <article class="action-plan-item">
+        <strong>Start today</strong>
+        <p class="small-text">${todayLine}</p>
+      </article>
+      <article class="action-plan-item">
+        <strong>If possible this week</strong>
+        <p class="small-text">${weekLine}</p>
+      </article>
+      <article class="action-plan-item">
+        <strong>Get help now if you notice this</strong>
+        <p class="small-text">${escalateLine}</p>
+      </article>
+    `;
+  }
 
   document.getElementById('follow-up-text').textContent = t('results_followup', { days: report.followUpDue });
 

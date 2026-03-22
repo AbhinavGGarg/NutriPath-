@@ -1557,6 +1557,27 @@ input[list]::-webkit-calendar-picker-indicator {
   color: var(--danger);
 }
 
+.action-plan-strip {
+  margin: 0.7rem 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.action-plan-item {
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(124, 234, 211, 0.2);
+  background: rgba(124, 234, 211, 0.08);
+  padding: 0.52rem 0.62rem;
+}
+
+.action-plan-item strong {
+  color: #cbfff0;
+}
+
+.action-plan-item p {
+  margin: 0.22rem 0 0;
+}
+
 .hide {
   display: none !important;
 }
