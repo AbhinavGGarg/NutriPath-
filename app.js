@@ -7571,7 +7571,7 @@
  return `rgba(255, 196, 118, ${alpha})`;
  }
 
- function createParticle(enterFromEdge = false) {
+  function createParticle(enterFromEdge = false) {
  const speed = rand(0.18, 0.62);
  const angle = rand(-0.35, 0.65);
  const fromLeft = Math.random() < 0.55;
@@ -7581,34 +7581,34 @@
  return {
  x,
  y,
- vx: Math.cos(angle) * speed * (fromLeft ? 1 : -1),
- vy: Math.sin(angle) * speed + rand(-0.06, 0.06),
- drift: rand(0.004, 0.014),
- phase: rand(0, Math.PI * 2),
- length: rand(10, 24),
- width: rand(1.2, 2.8),
- alpha: rand(0.22, 0.65),
- tone: Math.random(),
- };
- }
+      vx: Math.cos(angle) * speed * (fromLeft ? 1 : -1),
+      vy: Math.sin(angle) * speed + rand(-0.06, 0.06),
+      drift: rand(0.004, 0.014),
+      phase: rand(0, Math.PI * 2),
+      length: rand(6, 14),
+      width: rand(0.8, 1.8),
+      alpha: rand(0.18, 0.5),
+      tone: Math.random(),
+    };
+  }
 
- function addBurst(x, y) {
- const burstCount = prefersReducedMotion ? 8 : 16;
+  function addBurst(x, y) {
+    const burstCount = prefersReducedMotion ? 8 : 16;
  for (let i = 0; i < burstCount; i += 1) {
  const angle = (Math.PI * 2 * i) / burstCount + rand(-0.2, 0.2);
  const speed = rand(0.9, 2.4);
  sparks.push({
  x,
  y,
- vx: Math.cos(angle) * speed,
- vy: Math.sin(angle) * speed,
- life: rand(20, 34),
- maxLife: 34,
- size: rand(1.4, 3.2),
- tone: Math.random(),
- });
- }
- }
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: rand(20, 34),
+        maxLife: 34,
+        size: rand(0.9, 2),
+        tone: Math.random(),
+      });
+    }
+  }
 
  function resize() {
  width = Math.max(window.innerWidth, 1);
