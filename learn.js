@@ -968,7 +968,7 @@
         : 'No-cook strategy detected: prioritize ready proteins and shelf-stable combinations.';
 
       const actions = [
-        { title: 'Run Pantry Rescue now', desc: 'Convert your current ingredients into a better meal immediately.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
+        { title: 'Open Meal Builder now', desc: 'Convert your current ingredients into a better meal immediately.', cta: 'Open Meal Builder', href: './meal-builder.html#meal-rescue-builder' },
         { title: 'Open Meal Builder', desc: 'Get a larger meal plan after selecting key foods to buy.', cta: 'Open Meal Builder', href: './meal-builder.html' },
         { title: 'Find food support points', desc: 'If budget is collapsing, route to verified support resources.', cta: 'Open Resource Map', href: './map.html' },
       ];
@@ -1003,7 +1003,7 @@
         }
       `;
 
-      const voiceSummary = `${tier}. Budget planner generated a buy-first list and protein and iron priorities. First actions: Run pantry rescue, open meal builder, and use resource map if access is unstable.`;
+      const voiceSummary = `${tier}. Budget planner generated a buy-first list and protein and iron priorities. First actions: open meal builder, then use resource map if access is unstable.`;
       voice.setLatest(voiceSummary);
       engine.update({
         title: `Budget Planner Result: ${tier}`,
@@ -1045,7 +1045,7 @@
         corrected: 'Weight alone does not rule out malnutrition risk.',
         confidence: 0.84,
         saferNextAction: 'Run the assessment and check appetite, fatigue, and meal quality instead of weight alone.',
-        action: 'Run Assessment and Pantry Rescue to assess diet quality and warning signals.',
+        action: 'Run Assessment and Meal Builder to assess diet quality and warning signals.',
         href: './assessment.html',
         todaySteps: [
           'Run Assessment for a structured risk result.',
@@ -1093,8 +1093,8 @@
         corrected: 'Smaller consistent meals are usually safer than long meal gaps.',
         confidence: 0.8,
         saferNextAction: 'Use a simple 3-meal + 1 snack structure when possible, even with small portions.',
-        action: 'Use Pantry Rescue to build quick low-cost meals from what you already have.',
-        href: './learn.html?tool=pantry#tool-pantry-rescue',
+        action: 'Use Meal Builder to build quick low-cost meals from what you already have.',
+        href: './meal-builder.html#meal-rescue-builder',
         todaySteps: [
           'Set one consistent next meal time today.',
           'Build a small protein + energy meal now.',
@@ -1109,12 +1109,12 @@
         corrected: 'Frozen vegetables are a valid and often smart nutrition option.',
         confidence: 0.77,
         saferNextAction: 'Use frozen produce as a reliable fallback when fresh options are limited.',
-        action: 'Include frozen vegetables in pantry rescue and budget planning.',
-        href: './learn.html?tool=pantry#tool-pantry-rescue',
+        action: 'Include frozen vegetables in meal builder and budget planning.',
+        href: './meal-builder.html#meal-rescue-builder',
         todaySteps: [
           'Keep one frozen vegetable bag as backup.',
           'Pair it with a low-cost protein at dinner.',
-          'Use Pantry Rescue to balance the meal.',
+          'Use Meal Builder to balance the meal.',
         ],
       },
     ];
@@ -1196,9 +1196,9 @@
         explanation: 'Nutrition impact changes a lot based on frying vs baking, side choices, and drink choices.',
         corrected: 'Assess the full meal pattern, not only one label like “healthy” or “unhealthy.”',
         confidence: 0.68,
-        saferNextAction: 'Run Pantry Rescue or Meal Builder to convert this into a better next meal plan.',
+        saferNextAction: 'Run Meal Builder to convert this into a better next meal plan.',
         action: 'Use a practical tool to improve the next meal now.',
-        href: './learn.html?tool=pantry#tool-pantry-rescue',
+        href: './meal-builder.html#meal-rescue-builder',
         todaySteps: [
           'Keep the core item if needed.',
           'Add one protein and one protective food.',
@@ -1238,7 +1238,7 @@
       const output = match || fastFoodOutput || genericHealthOutput || fallback;
       const actions = [
         { title: 'Run linked tool', desc: output.action, cta: 'Open tool', href: output.href },
-        { title: 'Safer next action', desc: output.saferNextAction, cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
+        { title: 'Safer next action', desc: output.saferNextAction, cta: 'Open Meal Builder', href: './meal-builder.html#meal-rescue-builder' },
       ];
       const confidencePct = Math.max(20, Math.min(98, Math.round(Number(output.confidence || 0) * 100)));
 
@@ -1341,12 +1341,12 @@
       const actions = [];
       if (level === 'Urgent evaluation recommended') {
         actions.push({ title: 'Route to verified support now', desc: 'Use Resource Map immediately.', cta: 'Open Resource Map', href: './map.html' });
-        actions.push({ title: 'Prepare quick nutrition support', desc: 'Use Pantry Rescue while arranging follow-up.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' });
+        actions.push({ title: 'Prepare quick nutrition support', desc: 'Use Meal Builder while arranging follow-up.', cta: 'Open Meal Builder', href: './meal-builder.html#meal-rescue-builder' });
       } else if (level === 'Find support this week') {
         actions.push({ title: 'Check nearby support points', desc: 'Find clinics or food support services this week.', cta: 'Open Resource Map', href: './map.html' });
-        actions.push({ title: 'Stabilize household meals', desc: 'Use Budget Planner and Pantry Rescue for immediate meal upgrades.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' });
+        actions.push({ title: 'Stabilize household meals', desc: 'Use Budget Planner and Meal Builder for immediate meal upgrades.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' });
       } else if (level === 'Improve meals now') {
-        actions.push({ title: 'Run Pantry Rescue', desc: 'Prioritize protein and protective foods in next meal.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' });
+        actions.push({ title: 'Run Meal Builder', desc: 'Prioritize protein and protective foods in next meal.', cta: 'Open Meal Builder', href: './meal-builder.html#meal-rescue-builder' });
         actions.push({ title: 'Re-check symptoms', desc: 'Re-run this tool after 3-7 days.', cta: 'Re-run in Action Hub', href: './learn.html?tool=escalation#tool-escalation' });
       } else {
         actions.push({ title: 'Keep monitoring', desc: 'Track appetite, energy, and meal consistency.', cta: 'Take Assessment', href: './assessment.html' });
@@ -1800,7 +1800,7 @@
       const voiceSummary = `${qualityText}. ${qualityMessage} ${lockSet.size ? `Restriction lock active: ${lockLabelText}. ` : ''}Best action now: make the rescue meal, then add one cheap protein and one protective food.`;
       voice.setLatest(voiceSummary);
       engine.update({
-        title: `Pantry Rescue: ${qualityText}`,
+        title: `Meal Builder: ${qualityText}`,
         summary: qualityMessage,
         steps: nextSteps,
       });
@@ -1942,6 +1942,10 @@
         message.includes('unauthorized') ||
         message.includes('forbidden') ||
         message.includes('quota') ||
+        message.includes('points limit') ||
+        message.includes('daily points') ||
+        message.includes('upgrade your plan') ||
+        message.includes('has been reached') ||
         message.includes('rate limit') ||
         message.includes('too many request') ||
         message.includes('timed out') ||
@@ -2401,7 +2405,7 @@
           usedFallback ? 'Fallback nutrition search complete. Review protein and calorie targets.' : 'Nutrition-based recipe search complete. Review protein and calorie targets.',
         );
       } catch (error) {
-        nutritionResult.innerHTML = `<p>Nutrition search failed. ${escapeHtml(error.message)}</p>`;
+        nutritionResult.innerHTML = `<p>Could not fetch recipes right now. Showing local suggestions when available. Please try again.</p>`;
       } finally {
         nutritionResult.classList.remove('is-loading');
       }
@@ -2446,13 +2450,13 @@
           'Recipe Extraction',
           usedFallback ? 'Generated a local fallback extraction summary from the URL.' : 'Extracted a recipe from external URL and summarized key ingredients.',
           [
-            { title: 'Run Pantry Rescue', desc: 'Check if extracted recipe fits current ingredients.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
+            { title: 'Run Meal Builder', desc: 'Check if extracted recipe fits current ingredients.', cta: 'Open Meal Builder', href: './meal-builder.html#meal-rescue-builder' },
             { title: 'Build shopping priorities', desc: 'Prioritize missing foods by impact and budget.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
           ],
           usedFallback ? 'Fallback extraction complete. Compare ingredients with pantry and budget tools.' : 'Recipe extraction complete. Compare ingredients with pantry and budget tools.',
         );
       } catch (error) {
-        extractResult.innerHTML = `<p>Extraction failed. ${escapeHtml(error.message)}</p>`;
+        extractResult.innerHTML = `<p>Could not extract this recipe right now. Please try another link.</p>`;
       } finally {
         extractResult.classList.remove('is-loading');
       }
@@ -2495,12 +2499,12 @@
           usedFallback ? 'Classified cuisine using local keyword fallback model.' : 'Classified recipe cuisine and confidence for culturally relevant meal planning.',
           [
             { title: 'Run nutrition search next', desc: 'Filter recipes by your nutrient target.', cta: 'Nutrition Search', href: './meal-builder.html?recipeTool=nutrition#recipe-widget' },
-            { title: 'Adapt to pantry reality', desc: 'Use Pantry Rescue for household constraints.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
+            { title: 'Adapt to household reality', desc: 'Use Meal Builder for household constraints.', cta: 'Open Meal Builder', href: './meal-builder.html#meal-rescue-builder' },
           ],
           usedFallback ? 'Fallback cuisine classification complete.' : 'Cuisine classification complete. Use this to adapt culturally relevant meal choices.',
         );
       } catch (error) {
-        classifyResult.innerHTML = `<p>Classification failed. ${escapeHtml(error.message)}</p>`;
+        classifyResult.innerHTML = `<p>Could not classify this recipe right now. Try a simpler recipe title.</p>`;
       } finally {
         classifyResult.classList.remove('is-loading');
       }
@@ -2565,7 +2569,7 @@
           'Meal Plan + Shopping List',
           usedFallback ? `Generated a local fallback ${timeFrame} meal plan with shopping priorities.` : `Generated a ${timeFrame} meal plan with shopping priorities.`,
           [
-            { title: 'Cross-check pantry constraints', desc: 'Use Pantry Rescue if some plan meals are unrealistic.', cta: 'Open Pantry Rescue', href: './learn.html?tool=pantry#tool-pantry-rescue' },
+            { title: 'Cross-check household constraints', desc: 'Use Meal Builder if some plan meals are unrealistic.', cta: 'Open Meal Builder', href: './meal-builder.html#meal-rescue-builder' },
             { title: 'Budget tune-up', desc: 'Use Budget Planner to prioritize must-buy foods first.', cta: 'Open Budget Planner', href: './learn.html?tool=budget#tool-budget-planner' },
           ],
           usedFallback
@@ -2573,7 +2577,7 @@
             : `Meal plan generation complete for ${timeFrame} timeframe. Shopping list created from recipe ingredients.`,
         );
       } catch (error) {
-        mealResult.innerHTML = `<p>Meal plan generation failed. ${escapeHtml(error.message)}</p>`;
+        mealResult.innerHTML = `<p>Could not generate this meal plan right now. Please try again.</p>`;
       } finally {
         mealResult.classList.remove('is-loading');
       }
@@ -2632,7 +2636,7 @@
           'Recipe helper responded. Review suggested next actions and related tools.',
         );
       } catch (error) {
-        chatResult.innerHTML = `<p>Recipe helper failed. ${escapeHtml(error.message)}</p>`;
+        chatResult.innerHTML = `<p>Recipe helper is temporarily unavailable. Try a shorter query.</p>`;
       } finally {
         chatResult.classList.remove('is-loading');
       }

@@ -39,7 +39,6 @@
  <aside class="tool-tabs-nav" role="tablist" aria-label="Action tools">
  <a class="tool-tab-btn" href="./learn.html?tool=results#tool-assessment-results" data-tab="results">Assessment Results</a>
  <a class="tool-tab-btn active" href="./learn.html?tool=budget#tool-budget-planner" data-tab="budget">Budget Planner</a>
- <a class="tool-tab-btn" href="./learn.html?tool=pantry#tool-pantry-rescue" data-tab="pantry">Pantry Rescue</a>
  <a class="tool-tab-btn" href="./learn.html?tool=escalation#tool-escalation" data-tab="escalation">Urgency Escalation</a>
  <a class="tool-tab-btn" href="./learn.html?tool=claim#tool-claim-checker" data-tab="claim">Claim Checker</a>
  </aside>
@@ -111,76 +110,6 @@
  <button id="budget-plan-btn" class="btn btn-primary" type="button">Build budget plan</button>
  </div>
  <div id="budget-plan-result" class="tool-result hide"></div>
- </article>
-
- <article class="card tool-card tool-panel" id="tool-pantry-rescue" data-tool-tab="pantry">
- <h3>Pantry-to-Meal Rescue Tool</h3>
- <p class="small-text">Input what you have right now and get a practical meal rescue plan with quality feedback.</p>
- <div class="restriction-lock" id="nutrition-lock-shell">
- <p class="small-text"><strong>Allergy + Restriction Lock</strong> Keep meal outputs aligned to household needs.</p>
- <div class="checkbox-grid" id="nutrition-lock-grid">
- <label class="checkbox-item"><input type="checkbox" value="vegetarian" /> <span>Vegetarian</span></label>
- <label class="checkbox-item"><input type="checkbox" value="vegan" /> <span>Vegan</span></label>
- <label class="checkbox-item"><input type="checkbox" value="halal" /> <span>Halal</span></label>
- <label class="checkbox-item"><input type="checkbox" value="kosher" /> <span>Kosher</span></label>
- <label class="checkbox-item"><input type="checkbox" value="dairy_free" /> <span>Dairy-free</span></label>
- <label class="checkbox-item"><input type="checkbox" value="gluten_free" /> <span>Gluten-free</span></label>
- <label class="checkbox-item"><input type="checkbox" value="nut_free" /> <span>Nut-free</span></label>
- <label class="checkbox-item"><input type="checkbox" value="shellfish_free" /> <span>Shellfish-free</span></label>
- <label class="checkbox-item"><input type="checkbox" value="egg_free" /> <span>Egg-free</span></label>
- </div>
- <div class="cta-row" style="margin-top: 0.6rem;">
- <button id="nutrition-lock-apply" class="btn btn-secondary btn-small" type="button">Apply lock</button>
- <button id="nutrition-lock-clear" class="btn btn-secondary btn-small" type="button">Clear lock</button>
- </div>
- <p id="nutrition-lock-status" class="small-text" style="margin: 0.45rem 0 0;">No active locks.</p>
- </div>
- <div class="form-grid">
- <div class="field">
- <label for="hub-food-input">Add food you have now</label>
- <input id="hub-food-input" list="hub-food-options" placeholder="Example: rice, canned tuna, peanut butter" />
- <datalist id="hub-food-options"></datalist>
- </div>
- <div class="field" style="align-content: end;">
- <div class="cta-row">
- <button id="hub-add-food" class="btn btn-secondary" type="button">Add food</button>
- <button id="hub-clear-foods" class="btn btn-secondary" type="button">Clear</button>
- <button id="hub-analyze-foods" class="btn btn-primary" type="button">Run rescue plan</button>
- </div>
- </div>
- </div>
- <div id="hub-selected-foods" class="selected-foods" aria-live="polite"></div>
- <p id="hub-food-status" class="small-text" style="margin: 0.55rem 0 0;"></p>
-
- <div id="hub-food-results" class="section hide meal-builder-results">
- <div class="grid-2">
- <article class="card">
- <h4>Best meal now</h4>
- <ul id="hub-meal-list"></ul>
- </article>
- <article class="card">
- <h4>Better version with 1-2 cheap additions</h4>
- <ul id="hub-better-list"></ul>
- </article>
- </div>
- <div class="grid-2 section" style="padding-top: 0.75rem;">
- <article class="card">
- <h4>Likely missing nutrients</h4>
- <ul id="hub-gap-list"></ul>
- <p id="hub-easy-fix" class="small-text" style="margin-top: 0.6rem;"></p>
- </article>
- <article class="card">
- <h4>Good enough for now?</h4>
- <div id="hub-quality-result"></div>
- <h4 style="margin-top: 0.8rem;">Easy substitutions</h4>
- <ul id="hub-swap-list"></ul>
- </article>
- </div>
- <article class="card" style="margin-top: 0.75rem;">
- <h4>What to do next</h4>
- <div id="hub-next-steps" class="small-text"></div>
- </article>
- </div>
  </article>
 
  <article class="card tool-card tool-panel" id="tool-escalation" data-tool-tab="escalation">
